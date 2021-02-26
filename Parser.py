@@ -29,16 +29,26 @@ class Selenium:
 		'stock_list':False,
 		'news_list':False
 	}
-	parse_method = {'page' : '?&page='}
+	parse_method = {'page' : '&page='}
 	parse_module = {
-		'stock_list' : {'url':'https://finance.naver.com/sise/sise_market_sum.nhn',
+		'stock_list_kospi' : {
+						'url':'https://finance.naver.com/sise/sise_market_sum.nhn?sosok=0&page=1',
 						'alter':'page',
-						'page' : None, # page number
+						'page' : None, # page number,
+						'source' : '코스피',
 						},
-		'news_list' : {}
+		'stock_list_kosdaq' : {
+						'url' : 'https://finance.naver.com/sise/sise_market_sum.nhn?sosok=1&page=1',
+						'alter':'page',
+						'page' : None, # page number,
+						'source' : '코스닥'
+						},
+		'news_list' : {
+		}
 	}
 	pResult = {
-		'stock_list' : {},
+		'stock_list_kospi' : {},
+		'stock_list_kosdaq' : {},
 		'news_list' : {}
 	}
 
@@ -75,49 +85,58 @@ class Selenium:
 
 
 	@staticmethod
-	def _crawl_stock_list(module:str='stock_list'):
-		tmp_alter = Selenium.parse_method[Selenium.parse_module[module]['alter']]
-		# tmp_pgUrl_res = Selenium.__findTagElement(module=module,
-		# 										  methodString= '//td[@class="pgRR"]/a[@href]'
-		# 										  )[0].get_attribute('href')
-		tmp_pgUrl_res = Selenium.__findTagElement(module=module,
-												  methodString= '//td[@class="pgRR"]/a[@href]'
-												  ).get_attribute('href')
+	def _crawl_stock_list():
 
-		if tmp_pgUrl_res != None : # if the wanted result is parsed
+		tmp_module_key = [ key_lv1 for key_lv1, val1 in zip(Selenium.parse_module.keys(), Selenium.parse_module.values())
+						   if 'stock_list' in key_lv1]
 
-			tmp_href, tmp_last_pg = tmp_pgUrl_res.split(tmp_alter)
+		for module in tmp_module_key:
 
-			for pg_num in range(1, int(tmp_last_pg) + 1):
-				tmp_url = tmp_href + tmp_alter + str(pg_num)
+			tmp_alter = Selenium.parse_method[Selenium.parse_module[module]['alter']]
+			# tmp_pgUrl_res = Selenium.__findTagElement(module=module,
+			# 										  methodString= '//td[@class="pgRR"]/a[@href]'
+			# 										  )[0].get_attribute('href')
+			tmp_pgUrl_res = Selenium.__findTagElement(module=module,
+													  methodString= '//td[@class="pgRR"]/a[@href]'
+													  ).get_attribute('href')
 
-				tmp_targHead = Selenium.__findTagElement(module=module,
-														 methodString= \
-								'//div[@id="contentarea"]' + \
-								'/div[@class]' + \
-								'/table[@class="type_2"]' + \
-								'/thead/tr',
-								 targUrl=tmp_url).find_elements_by_xpath('//th[@scope]')
-				tmp_headList = [ obj.text for obj in tmp_targHead ]
+			if tmp_pgUrl_res != None : # if the wanted result is parsed
+
+				tmp_href, tmp_last_pg = tmp_pgUrl_res.split(tmp_alter)
+
+				for pg_num in range(1, int(tmp_last_pg) + 1):
+					tmp_url = tmp_href + tmp_alter + str(pg_num)
+
+					tmp_targHead = Selenium.__findTagElement(module=module,
+															 methodString= \
+									'//div[@id="contentarea"]' + \
+									'/div[@class]' + \
+									'/table[@class="type_2"]' + \
+									'/thead/tr',
+									 targUrl=tmp_url).find_elements_by_xpath('//th[@scope]')
+					tmp_headList = [ obj.text for obj in tmp_targHead ]
 
 
-				tmp_htmlSource = Selenium.driver.page_source
-				soup = BeautifulSoup(tmp_htmlSource, 'lxml')
-				tmp_targVar = soup.find("table", attrs={"class": "type_2"}).find("tbody").find_all("tr")
-				tmp_varList = []
-				_ = [tmp_varList.append(obj.get_text().split()) for obj in tmp_targVar if len(obj.get_text()) > 1]
+					tmp_htmlSource = Selenium.driver.page_source
+					soup = BeautifulSoup(tmp_htmlSource, 'lxml')
+					tmp_targVar = soup.find("table", attrs={"class": "type_2"}).find("tbody").find_all("tr")
+					tmp_varList = []
+					_ = [tmp_varList.append(obj.get_text().split()) for obj in tmp_targVar if len(obj.get_text()) > 1]
 
-				# @ append container
-				for var_list in tmp_varList:
-					tmp_containerCls = StockData(tmp_headList, var_list)
-					Selenium.pResult[module][tmp_containerCls.name] = tmp_containerCls
+					# @ append container
+					for var_list in tmp_varList:
+						tmp_containerCls = StockData(tmp_headList, var_list, source=Selenium.parse_module[module])
+						Selenium.pResult[module][tmp_containerCls.name] = tmp_containerCls
 
-			# set the flag up
-			Selenium.flags[module] = True
+				# set the flag up
+				Selenium.flags[module] = True
 
-		else:
-			# try loading from Sqlite DB
-			pass
+
+	@staticmethod
+	def _craw_news():
+		"""crawl news"""
+		pass
+
 
 if __name__ =='__main__':
 	tmp_cls = Selenium()
