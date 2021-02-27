@@ -56,8 +56,8 @@ class Selenium:
 	def __getDriver(url:str):
 		"""load driver a url"""
 		try:
-			# print(f'Selenium.driver : {Selenium.driver}')
-			# print(f'type(Selenium.driver) : {type(Selenium.driver)}')
+			# print(f'SeleniumUpdater.driver : {SeleniumUpdater.driver}')
+			# print(f'type(SeleniumUpdater.driver) : {type(SeleniumUpdater.driver)}')
 			if Selenium.driver.current_url != url:
 				Selenium.driver.get(url)
 		except:
@@ -85,15 +85,15 @@ class Selenium:
 
 
 	@staticmethod
-	def _crawl_stock_list():
+	def _crawl_stock_list(state='stock_list'):
 
 		tmp_module_key = [ key_lv1 for key_lv1, val1 in zip(Selenium.parse_module.keys(), Selenium.parse_module.values())
-						   if 'stock_list' in key_lv1]
+						   if state in key_lv1]
 
 		for module in tmp_module_key:
 
 			tmp_alter = Selenium.parse_method[Selenium.parse_module[module]['alter']]
-			# tmp_pgUrl_res = Selenium.__findTagElement(module=module,
+			# tmp_pgUrl_res = SeleniumUpdater.__findTagElement(module=module,
 			# 										  methodString= '//td[@class="pgRR"]/a[@href]'
 			# 										  )[0].get_attribute('href')
 			tmp_pgUrl_res = Selenium.__findTagElement(module=module,
@@ -130,6 +130,18 @@ class Selenium:
 
 				# set the flag up
 				Selenium.flags[module] = True
+
+		# when done parsing
+		rtn_all_dict = {}
+		for module_key in Selenium.pResult:
+			for stockName_key in Selenium.pResult[module_key]:
+				tmp_cls = Selenium.pResult[module_key][stockName_key]
+				rtn_all_dict.update(tmp_cls.__toDict())
+
+		return rtn_all_dict
+
+
+
 
 
 	@staticmethod

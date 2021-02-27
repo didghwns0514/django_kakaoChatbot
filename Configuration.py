@@ -59,4 +59,24 @@ class StockData(object):
 		self.PER = float(self._pValue[arbitary_index+8]) if 'N/A' not in self._pValue[arbitary_index+8] else float(0)
 		self.ROE = float(self._pValue[arbitary_index+9]) if 'N/A' not in self._pValue[arbitary_index+9] else float(0)
 
+	def __toDict(self):
+		"""to dump result as dictionary"""
+		rnt_dict = {}
+		rnt_dict[self.name] = {}
+
+		rnt_dict[self.name]['source'] = self.source
+		rnt_dict[self.name]['num'] = self.num
+		rnt_dict[self.name]['name'] = self.name
+		rnt_dict[self.name]['priceNow'] = self.priceNow
+		rnt_dict[self.name]['priceCompared'] = self.priceCompared
+		rnt_dict[self.name]['priceRatio'] = self.priceRatio
+		rnt_dict[self.name]['priceStraight'] = self.priceStraight
+		rnt_dict[self.name]['totalStockSum'] = self.totalStockSum
+		rnt_dict[self.name]['totalStockNum'] = self.totalStockNum
+		rnt_dict[self.name]['totalForeignRatio'] = self.totalForeignRatio
+		rnt_dict[self.name]['tradeSum'] = self.tradeSum
+		rnt_dict[self.name]['PER'] = self.PER
+		rnt_dict[self.name]['ROE'] = self.ROE
+
+		return rnt_dict
 

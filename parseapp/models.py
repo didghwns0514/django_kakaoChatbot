@@ -1,4 +1,6 @@
 from django.db import models
+from config.settings import BASE_DIR, DATABASES
+from datetime import datetime
 
 # Create your models here.
 class StockListData(models.Model):
@@ -17,6 +19,13 @@ class StockListData(models.Model):
 	trade_sum = models.IntegerField()
 	per = models.FloatField()
 	roe = models.FloatField()
+	timestamp = models.DateTimeField()
 
-	class Meta:
-		pass
+	def save(self, *args, **kwargs):
+		if not self.id:
+			self.timestamp = datetime.utcnow()
+
+		return super(StockListData, self).save(*args, **kwargs)
+
+	# class Meta:
+	# 	app_label = DATABASES['db_stock_list']['NAME']

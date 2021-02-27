@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'parseapp',
-    'parsenewsapp',
+    'parseapp.apps.ParseappConfig',
+    'parsenewsapp.apps.ParsenewsappConfig',
 ]
 
 MIDDLEWARE = [
@@ -80,16 +80,16 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     },
-    'db_stock_list':{
-        'NAME': BASE_DIR /'db.stock_list.sqlite3',
-        'ENGINE': 'django.db.backends.sqlite3',
-    },
-    'db_stock_news':{
-        'NAME': BASE_DIR /'db.stock_news.sqlite3',
-        'ENGINE': 'django.db.backends.sqlite3',
-    }
+    # 'db_stock_list':{
+    #     'NAME': 'db.stock_list.sqlite3',
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    # },
+    # 'db_stock_news':{
+    #     'NAME': 'db.stock_news.sqlite3',
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    # }
 }
-DATABASE_ROUTERS = ['Router.MultiDBRouter',]
+#DATABASE_ROUTERS = ['Router.MultiDBRouter',]
 
 
 # Password validation
