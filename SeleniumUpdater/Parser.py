@@ -125,7 +125,7 @@ class Selenium:
 
 					# @ append container
 					for var_list in tmp_varList:
-						tmp_containerCls = StockData(tmp_headList, var_list, source=Selenium.parse_module[module])
+						tmp_containerCls = StockData(tmp_headList, var_list, source=Selenium.parse_module[module]['source'])
 						Selenium.pResult[module][tmp_containerCls.name] = tmp_containerCls
 
 				# set the flag up
@@ -136,7 +136,7 @@ class Selenium:
 		for module_key in Selenium.pResult:
 			for stockName_key in Selenium.pResult[module_key]:
 				tmp_cls = Selenium.pResult[module_key][stockName_key]
-				rtn_all_dict.update(tmp_cls.__toDict())
+				rtn_all_dict.update(tmp_cls.toDict())
 
 		return rtn_all_dict
 

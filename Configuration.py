@@ -59,7 +59,7 @@ class StockData(object):
 		self.PER = float(self._pValue[arbitary_index+8]) if 'N/A' not in self._pValue[arbitary_index+8] else float(0)
 		self.ROE = float(self._pValue[arbitary_index+9]) if 'N/A' not in self._pValue[arbitary_index+9] else float(0)
 
-	def __toDict(self):
+	def toDict(self):
 		"""to dump result as dictionary"""
 		rnt_dict = {}
 		rnt_dict[self.name] = {}
