@@ -5,5 +5,5 @@ class ParseappConfig(AppConfig):
     name = 'parseapp'
 
     def ready(self):
-        from SeleniumUpdater import UPDATE_parser
-        UPDATE_parser.start()
+        from BusinessLogic import BL_Scheduler
+        BL_Scheduler.start()

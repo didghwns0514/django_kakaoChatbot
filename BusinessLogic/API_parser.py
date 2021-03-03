@@ -1,16 +1,16 @@
 
 from django.db.models import Q
-from datetime import *
 
 import traceback
 
 from parseapp.models import StockListData
-from SeleniumUpdater.Parser import Selenium
+from BusinessLogic.StockList.Parser import Selenium
 from Common import *
 
-new_selObj = Selenium()
+selenium_stock_list = Selenium()
+selenium_news = Selenium()
 
-class UpdateState:
+class UpdateStockListState:
 	"""to check if SQL update with less columns is possible"""
 
 	TOTAL_COL = ['source','num','name','price_now','price_compared','price_ratio',
@@ -27,23 +27,23 @@ class UpdateState:
 	@staticmethod
 	def get():
 		"""return column and batch size"""
-		if UpdateState.LAST_UPDATE == None: # never parsed before
-			UpdateState.LAST_UPDATE = datetime.now()
-			return int(UpdateState.SAFE_BATCH), UpdateState.TOTAL_COL
+		if UpdateStockListState.LAST_UPDATE == None: # never parsed before
+			UpdateStockListState.LAST_UPDATE = datetime.now()
+			return int(UpdateStockListState.SAFE_BATCH), UpdateStockListState.TOTAL_COL
 		else:
-			if datetime.now() - timedelta(hours=7) >= UpdateState.LAST_UPDATE: # exceeded time limit
-				UpdateState.LAST_UPDATE = datetime.now()
-				return int(UpdateState.SAFE_BATCH), UpdateState.TOTAL_COL
+			if datetime.now() - timedelta(hours=7) >= UpdateStockListState.LAST_UPDATE: # exceeded time limit
+				UpdateStockListState.LAST_UPDATE = datetime.now()
+				return int(UpdateStockListState.SAFE_BATCH), UpdateStockListState.TOTAL_COL
 			else:
 
-				return int(UpdateState.ORI_BATCH // (len(UpdateState.NEW_COL)*2.5)), UpdateState.NEW_COL
+				return int(UpdateStockListState.ORI_BATCH // (len(UpdateStockListState.NEW_COL)*2.5)), UpdateStockListState.NEW_COL
 
 def update_stock_list():
 
-	#new_selObj = SeleniumUpdater()
+	#selenium_stock_list = SeleniumUpdater()
 
 	if check_opTime() :
-		result_dict = new_selObj._crawl_stock_list()
+		result_dict = selenium_stock_list._crawl_stock_list()
 
 		try:
 
@@ -82,7 +82,7 @@ def update_stock_list():
 				tORM.per = result_dict[stockName_key]['PER']
 				tORM.roe = result_dict[stockName_key]['ROE']
 
-			_batch_size, col_names = UpdateState.get()
+			_batch_size, col_names = UpdateStockListState.get()
 			for k in range( int( len(tmp_update)//_batch_size)+1 ):
 				# print(f'k : {k}')
 				# print(f'k*_batch_size : {k*_batch_size}')
@@ -122,6 +122,6 @@ def update_stock_list():
 		pass
 
 
-def update_parser_test():
+def update_news():
 	from datetime import datetime
 	print(f'datetime now : {datetime.now()}')

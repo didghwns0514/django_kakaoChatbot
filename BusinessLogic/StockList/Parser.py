@@ -10,21 +10,21 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 from Configuration import *
 import lxml
+from pathlib import Path
+import os
 
 
 
 class Selenium:
 
 	# @ setup args
+	location = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../..", "static", "chromedriver")
 	options = webdriver.ChromeOptions()
 	args = ['headless', 'window-size=1920x1080', 'disable-gpu',
 			"user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"]
 	for arg in args:
 		options.add_argument(arg)
 
-	# @ driver
-	driver = webdriver.Chrome('./static/chromedriver', chrome_options=options)
-	driver.implicitly_wait(3)
 	dResult = None
 
 	flags = {
@@ -32,7 +32,8 @@ class Selenium:
 		'news_list':False
 	}
 	errjobs = 0
-	parse_method = {'page' : '&page='}
+	parse_method = {'page' : '&page=',
+					'date' : '&date='}
 	parse_module = {
 		'stock_list_kospi' : {
 						'url':'https://finance.naver.com/sise/sise_market_sum.nhn?sosok=0&page=1',
@@ -47,6 +48,9 @@ class Selenium:
 						'source' : '코스닥',
 						},
 		'news_list' : {
+						'url':'https://finance.naver.com/news/news_list.nhn?mode=LSS2D&section_id=101&section_id2=258',
+						'alter' : 'date',
+						'date': None
 		}
 	}
 	pResult = {
@@ -55,19 +59,27 @@ class Selenium:
 		'news_list' : {}
 	}
 
-	@staticmethod
-	def __getDriver(url:str):
+	def __init__(self):
+		# @ driver
+		print(f'PATH!!!!: { Selenium.location }')
+
+		# '../static/chromedriver'
+		self.driver = webdriver.Chrome(Selenium.location, chrome_options=Selenium.options)
+		self.driver.implicitly_wait(3)
+
+
+	def __getDriver(self, url:str):
 		"""load driver a url"""
 		try:
 			# print(f'SeleniumUpdater.driver : {SeleniumUpdater.driver}')
 			# print(f'type(SeleniumUpdater.driver) : {type(SeleniumUpdater.driver)}')
-			if Selenium.driver.current_url != url:
-				Selenium.driver.get(url)
+			if self.driver.current_url != url:
+				self.driver.get(url)
 		except:
 			pass
 
-	@staticmethod
-	def __findTagElement(module:str, methodString:str,targUrl:str=None):
+
+	def __findTagElement(self, module:str, methodString:str,targUrl:str=None):
 		"""
 		method to find tag elements
 		:param methodString:
@@ -78,17 +90,16 @@ class Selenium:
 
 		if targUrl == None: # set target from dictionary
 			mode = Selenium.parse_module[module]
-			Selenium.__getDriver(mode['url'])
+			self.__getDriver(mode['url'])
 		else:
-			Selenium.__getDriver(targUrl)
+			self.__getDriver(targUrl)
 
-		Selenium.dResult = Selenium.driver.find_element_by_xpath(methodString)
+		Selenium.dResult = self.driver.find_element_by_xpath(methodString)
 
 		return Selenium.dResult
 
 
-	@staticmethod
-	def _crawl_stock_list(state='stock_list'):
+	def _crawl_stock_list(self, state='stock_list'):
 
 		print(f'Selenium.errjobs : {Selenium.errjobs}')
 
@@ -101,7 +112,7 @@ class Selenium:
 				# tmp_pgUrl_res = SeleniumUpdater.__findTagElement(module=module,
 				# 										  methodString= '//td[@class="pgRR"]/a[@href]'
 				# 										  )[0].get_attribute('href')
-				tmp_pgUrl_res = Selenium.__findTagElement(module=module,
+				tmp_pgUrl_res = self.__findTagElement(module=module,
 														  methodString= '//td[@class="pgRR"]/a[@href]'
 														  ).get_attribute('href')
 
@@ -112,7 +123,7 @@ class Selenium:
 					for pg_num in range(1, int(tmp_last_pg) + 1):
 						tmp_url = tmp_href + tmp_alter + str(pg_num)
 
-						tmp_targHead = Selenium.__findTagElement(module=module,
+						tmp_targHead = self.__findTagElement(module=module,
 																 methodString= \
 										'//div[@id="contentarea"]' + \
 										'/div[@class]' + \
@@ -122,7 +133,7 @@ class Selenium:
 						tmp_headList = [ obj.text for obj in tmp_targHead ]
 
 
-						tmp_htmlSource = Selenium.driver.page_source
+						tmp_htmlSource = self.driver.page_source
 						soup = BeautifulSoup(tmp_htmlSource, 'lxml')
 						tmp_targVar = soup.find("table", attrs={"class": "type_2"}).find("tbody").find_all("tr")
 						tmp_varList = []
@@ -149,15 +160,16 @@ class Selenium:
 			print(f'error : {e}')
 			print(f'tmp_alter : {tmp_alter}')
 			print(f'module : {module}')
+			traceback.print_exc()
 
 			# error cnt up
 			Selenium.errjobs += 1
 
 			try:
-				Selenium.driver.close()
+				self.driver.close()
 				# reload
-				Selenium.driver = webdriver.Chrome('./static/chromedriver', chrome_options=Selenium.options)
-				Selenium.driver.implicitly_wait(3)
+				self.driver = webdriver.Chrome('./static/chromedriver', chrome_options=Selenium.options)
+				self.driver.implicitly_wait(3)
 			except:
 				pass
 
@@ -169,6 +181,11 @@ class Selenium:
 
 
 if __name__ =='__main__':
-	tmp_cls = Selenium()
-	tmp_cls._crawl_stock_list()
+	import traceback
+	try:
+		tmp_cls = Selenium()
+		tmp_cls._crawl_stock_list()
+	except Exception as e:
+		print(e)
+		traceback.print_exc()
 
