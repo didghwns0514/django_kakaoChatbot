@@ -4,7 +4,7 @@ from django.db.models import Q
 import traceback
 
 from parseapp.models import StockListData
-from BusinessLogic.StockList.Parser import Selenium
+from BusinessLogic.Parser import Selenium
 from Common import *
 
 selenium_stock_list = Selenium()
@@ -54,16 +54,7 @@ def update_stock_list():
 						 for _name in tmp_stockName_key ]
 			tmp_update = [ djangoORM[n][0] for n, stkName in enumerate(tmp_stockName_key) if djangoORM[n] ]
 			tmp_create = [ stkName for n, stkName in enumerate(tmp_stockName_key) if not djangoORM[n] ]
-			#
-			# print(f'tmp_update : {tmp_update}')
-			# print(f'tmp_create : {tmp_create}')
 
-			# for _item in tmp_update:
-			# 	print(f'type of _item : {type(_item)}')
-			# 	print(f'_item : {_item}')
-			# 	for sub in _item:
-			# 		print(f'type of sub : {type(sub)}')
-			# 		print(f'sub : {sub}')
 
 			# @ update
 			for tORM in tmp_update:
@@ -84,10 +75,6 @@ def update_stock_list():
 
 			_batch_size, col_names = UpdateStockListState.get()
 			for k in range( int( len(tmp_update)//_batch_size)+1 ):
-				# print(f'k : {k}')
-				# print(f'k*_batch_size : {k*_batch_size}')
-				# print(f'(k+1)*_batch_size : {(k+1)*_batch_size}')
-				# print(f'size chosen : {len(tmp_update[k*_batch_size : (k+1)*_batch_size])}')
 				StockListData.objects.bulk_update(tmp_update[k*_batch_size : (k+1)*_batch_size],
 												  col_names)
 			StockListData.objects.all().update(timestamp=datetime.now())

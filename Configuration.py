@@ -80,3 +80,6 @@ class StockData(object):
 
 		return rnt_dict
 
+
+
+class NewsData_Naver:
