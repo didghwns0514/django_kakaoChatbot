@@ -76,22 +76,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
-    # 'db_stock_list':{
-    #     'NAME': 'db.stock_list.sqlite3',
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    # },
-    # 'db_stock_news':{
-    #     'NAME': 'db.stock_news.sqlite3',
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    # }
-}
-#DATABASE_ROUTERS = ['Router.MultiDBRouter',]
 
+DATABASES = C.__MY_DB
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

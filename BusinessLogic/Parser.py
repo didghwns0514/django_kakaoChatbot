@@ -13,7 +13,7 @@ import lxml
 from pathlib import Path
 import os
 from datetime import datetime, timedelta
-import re
+
 
 
 class Selenium:
@@ -245,7 +245,7 @@ class Selenium:
 			# url now
 			urlNow = Selenium.parse_module[module]['url']
 			url1 , url2 = urlNow.split(tmp_alter['date'])
-			url2, url3 = url2.split(tmp_alter['page'])
+			url2,  url3 = url2.split(tmp_alter['page'])
 
 			# @ targ url
 			targUrl = url1 + tmp_alter['date'] + pDate + tmp_alter['page']
@@ -273,20 +273,31 @@ class Selenium:
 				tmp_htmlSource = self.driver.page_source
 				soup = BeautifulSoup(tmp_htmlSource, 'lxml')
 				tmp_targVar = soup.find_all("dd", attrs={"class": "articleSubject"})
+				""" filter url to wanted configuration that can be hashed"""
 				tmp_result = [ ('https://finance.naver.com' + data.find("a").attrs.get('href')).split('&mode=')[0]  \
 							   for data in tmp_targVar]
 
-				print(f'tmp_result : {tmp_result}')
 
 				# @ iter found article urls
 				for aUrl in tmp_result:
 					#https://finance.naver.com/news/news_read.nhn?article_id=0004760077&office_id=009&mode=LSS2D&type=0&section_id=101&section_id2=258&section_id3=&date=20210308&page=1
 
-					pass
+					# @ look up data table
+					if aUrl in Selenium.pResult['news_list']:
+						continue # skip existing record from memory
 
+					# @ if not
+					# set url & get source
+					self.__getDriver(url=aUrl)
+					tmp_htmlSource = self.driver.page_source
+					Selenium.pResult['news_list'][aUrl] = NewsData_Naver(pgSource=tmp_htmlSource, url=aUrl,
+																		 date_len=Selenium.parse_module['news_list_naver']['date_back'] )
 
-
-
+				# @ eraise if date is exceeded
+				cpyDict = {key:value._keep_data() for key, value in zip(Selenium.pResult['news_list'].keys(), Selenium.pResult['news_list'].values())}
+				for (key, value) in cpyDict.items():
+					if value == False:
+						Selenium.pResult['news_list'].pop(key, None) # if not correct key, return None
 
 
 

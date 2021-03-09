@@ -1,6 +1,10 @@
 """
 	For class setup
 """
+from bs4 import BeautifulSoup
+import lxml
+import re
+from datetime import datetime
 
 class StockData(object):
 	"""class for containing parsed data"""
@@ -83,3 +87,51 @@ class StockData(object):
 
 
 class NewsData_Naver:
+
+
+	def __init__(self, pgSource, url, date_len):
+		"""
+		the result of the page
+		:param pgSource: page source as text
+		:param url: url of the source
+		:param date: date length to archive
+		"""
+		self.pg_source = pgSource
+		self.url = url
+		print(f'self.url : {self.url}')
+		self.article_date = None
+		self.title = None
+		self.date_len = date_len
+
+		self.__alloc_parsed()
+
+	def _clean_text(self, text2clean):
+		cleaned_text = re.sub('[a-zA-Z]', '', text2clean)
+		cleaned_text = re.sub('[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]', '', cleaned_text)
+
+		return cleaned_text.strip()
+
+
+	def __alloc_parsed(self):
+
+		tmp_bs4 = BeautifulSoup(self.pg_source, 'lxml', from_encoding='utf-8')
+
+		# @ get title
+		tmp_title = tmp_bs4.find("div", attrs={"class": "article_info"}).find('h3')
+		self.title = self._clean_text(tmp_title.text)
+
+		# @ get date
+		tmp_date = tmp_bs4.find("span", attrs={"class": "article_date"})
+		self.article_date = datetime.strptime(self._clean_text(tmp_date.text),
+											  '%Y%m%d %H%M')
+
+		# @ get content
+		tmp_content = tmp_bs4.find("div", attrs={'class': 'articleCont', 'id':'content'})
+		# cleaned_text = re.sub('[a-zA-Z]', '', text)
+		# cleaned_text = re.sub('[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]', '', cleaned_text)
+		print(tmp_content.text)
+
+
+	def _keep_data(self):
+		"""True if keep, False if needs deletion"""
+		return True
