@@ -4,6 +4,9 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse # kkotalk api
 from django.views.decorators.csrf import csrf_exempt # block CSRF attacks
+from django.views.decorators.csrf import ensure_csrf_cookie # https://stackoverflow.com/questions/19598993/csrf-cookie-not-set-django-verification-failed
+from django.utils.decorators import method_decorator
+
 import json
 
 from django.shortcuts import render
@@ -20,6 +23,37 @@ from Common import *
 # test perpose... kko talk has moved to i-builder
 def index(request):
 	return HttpResponse("Hello, world. You are at the parseapp index!")
+
+
+#@ensure_csrf_cookie
+@method_decorator(csrf_exempt, name='dispatch')
+def test(request):
+	"""
+	참조 (reference)
+	https://primrose.tistory.com/55
+	https://likelion-kgu.tistory.com/41
+	"""
+	#return_json_str = json.loads(request.body)
+
+	if request.method == "GET":
+		print(f'request in GET : {request}')
+		print(f'request attribs : {request.__dict__}')
+
+		context = {'time' : str(datetime.now())}
+		return HttpResponse(json.dumps(context), content_type='application/json')
+
+	elif request.method == "POST":
+		print(f'request in POST : {request}')
+		print(f'request attribs : {request.__dict__}')
+		print(f'request request body : {request.body}')
+
+		# toJson = json.loads(request.body.decode('utf-8'))
+		toJson = json.loads(request.body)
+		print(f'toJson : {toJson}')
+
+		context = {'time' : str(datetime.now())}
+		return HttpResponse(json.dumps(context), content_type='application/json')
+
 
 #test perpose... kko talk has moved to i-builder
 def keyboard(request):
