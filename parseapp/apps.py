@@ -6,4 +6,4 @@ class ParseappConfig(AppConfig):
 
     def ready(self):
         from BusinessLogic import BL_Scheduler
-        BL_Scheduler.start()
+        BL_Scheduler.start_news()

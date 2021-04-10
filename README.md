@@ -21,8 +21,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
     - will be using **wsgi** or **gunicorn** `(not available yet - will be added in the future)`
   - Business logic:
     - used apscheduler library to continuously crawl information on intervals
-    - under scheduler, selenium based function is executed to parse stock information \
-     from the web
+    - under scheduler, selenium based function is executed to parse stock information from the web
         ```python
         from apscheduler.schedulers.background import BackgroundScheduler
         from BusinessLogic import API_parser
@@ -35,6 +34,9 @@ Will provide you `**Real-Time Top Stocks**` at any time.
             scheduler.start()
         
         ```
+    - overriding the following method, the following logic will run periodically when app starts.
+      ![image](https://user-images.githubusercontent.com/47662495/114277110-d1ab3e80-9a64-11eb-953d-b6a26fc6aed1.png)
+      ![image](https://user-images.githubusercontent.com/47662495/114277263-73cb2680-9a65-11eb-9f9a-951cda2355df.png)
   - mySQL
     - stores stock information parsed roughly every minute, stores it in the databse
 
@@ -154,7 +156,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
   ![image](https://user-images.githubusercontent.com/47662495/114262712-68074200-9a1c-11eb-94b8-db64741e4935.png)
 
   3) Type in which stock catagory you are looking for <br/>
-  ![image](https://user-images.githubusercontent.com/47662495/114262722-73f30400-9a1c-11eb-92fb-97756d9b93d5.png)
+  ![image](https://user-images.githubusercontent.com/47662495/114262722-73f30400-9a1c-11eb-92fb-97756d9b93d5.png)<br/>
   ![image](https://user-images.githubusercontent.com/47662495/114262724-7c4b3f00-9a1c-11eb-83d6-1c434ad4a473.png)
 
 -----------
