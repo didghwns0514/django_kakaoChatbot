@@ -1,6 +1,8 @@
 # - django_kakaoChatbot -
 
-An django framework that communicates with Kakao API server using provided front-end url.
+An django framework that communicates with Kakao API server using provided front-end url. <br/>
+<br/>
+Will provide you `**Real-Time Top Stocks**` at any time.
 
 > Checked running with local PC open PORT only, will be deploied in the future.
 >
