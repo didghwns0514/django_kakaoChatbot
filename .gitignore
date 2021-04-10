@@ -3,3 +3,5 @@
 *.idea*
 *__pycache__*
 /Common.py
+/history.docx
+*istory.docx

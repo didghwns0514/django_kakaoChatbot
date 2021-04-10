@@ -24,13 +24,3 @@ class StockListData(models.Model):
 	def __str__(self):
 		return self.name
 
-	# def save(self, *args, **kwargs):
-	# 	# if not self.id: # new record
-	# 	# 	self.timestamp = datetime.utcnow()
-	# 	return super(StockListData, self).save(*args, **kwargs)
-
-
-
-
-	# class Meta:
-	# 	app_label = DATABASES['db_stock_list']['NAME']
