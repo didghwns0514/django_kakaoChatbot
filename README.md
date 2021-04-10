@@ -152,6 +152,7 @@ An django framework that communicates with Kakao API server using provided front
   ![image](https://user-images.githubusercontent.com/47662495/114262712-68074200-9a1c-11eb-94b8-db64741e4935.png)
 
   3) Type in which stock catagory you are looking for <br/>
+  ![image](https://user-images.githubusercontent.com/47662495/114262722-73f30400-9a1c-11eb-92fb-97756d9b93d5.png)
   ![image](https://user-images.githubusercontent.com/47662495/114262724-7c4b3f00-9a1c-11eb-83d6-1c434ad4a473.png)
 
 -----------
