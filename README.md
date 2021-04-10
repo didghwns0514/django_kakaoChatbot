@@ -98,8 +98,7 @@ An django framework that communicates with Kakao API server using provided front
 
         for k in range( int( len(tmp_update)//_batch_size)+1 ):
 			StockListData.objects.bulk_update(
-                tmp_update[k*_batch_size : (k+1)*_batch_size],
-												  col_names)
+                tmp_update[k*_batch_size : (k+1)*_batch_size], col_names)
         ...
         ```
     - parses stock news information and converts into sentiment analysis, stores it <br/> in the database `(not available yet - will be added in the future)`
@@ -144,7 +143,7 @@ An django framework that communicates with Kakao API server using provided front
 
 **Simple usage :**
 
-- image \
+- image
   1) Add the chatbot in your application <br/>
   ![image](https://user-images.githubusercontent.com/47662495/114262703-57ef6280-9a1c-11eb-9f88-d363052ef357.png)
 
