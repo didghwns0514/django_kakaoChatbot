@@ -1,1 +1,1 @@
-pip freeze > requirements.txt
+pip freeze --exclude PyYAML > requirements.txt
