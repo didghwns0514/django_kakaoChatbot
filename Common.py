@@ -10,9 +10,9 @@ __MY_DB = 	{'default':{
 				'NAME' : 'kakaostock',
 				'ENGINE' : 'django.db.backends.mysql',
 				'USER' : 'root', # user name for login to DB
-				'PASSWORD' : '@robotchicken',
-				'HOST' : 'localhost', # ip, if error use >>>  127.0.0.1
-				'PORT' : '3306',
+				'PASSWORD' : 'd@12YinYang',
+				'HOST' : 'http://hjyang.iptime.org', # ip, if error use >>>  127.0.0.1
+				'PORT' : '44441',
 } }
 
 # DATABASES = {
