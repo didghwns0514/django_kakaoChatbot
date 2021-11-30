@@ -19,7 +19,8 @@ from datetime import datetime, timedelta
 class Selenium:
 
 	# @ setup args
-	location = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "static", "chromedriver")
+	#location = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "static", "chromedriver")
+	location = 'usr/src/app/static/chromedriver'
 	options = webdriver.ChromeOptions()
 	args = ['headless', 'window-size=1920x1080', 'disable-gpu',
 			"user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"]
