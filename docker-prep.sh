@@ -4,6 +4,7 @@ pip install django-cors-headers
 pip install mysqlclient
 pip install gunicorn
 pip install apscheduler
+pip install selenium
 
 python3 manage.py collectstatic --noinput
 python3 manage.py makemigrations
