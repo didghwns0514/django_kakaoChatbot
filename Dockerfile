@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 COPY docker-prep.sh .
 COPY . .
 
-
+RUN chmod +x ./docker-prep.sh
 RUN ./docker-prep.sh
 #    "./manage.py", "makemigrations" \
 #    "./manage.py", "migrate" \
