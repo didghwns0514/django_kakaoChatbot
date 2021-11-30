@@ -1,21 +1,23 @@
 version: "2"
 
 services:
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "5552:5552/tcp"
-    volumes:
-      # nginx 설정파일을 로컬의 ./nginx 폴더에 넣어준 후 연결
-      - ./nginx:/etc/nginx/conf.d
-
-      # Django와 사용하는 static 폴더
-      - ./static:/staticfiles
-    depends_on:
-      - django
+#  nginx:
+#    image: nginx:latest
+#    container_name: nginx
+#    ports:
+#      - "5552:5552/tcp"
+#    volumes:
+#      # nginx 설정파일을 로컬의 ./nginx 폴더에 넣어준 후 연결
+#      - ./nginx:/etc/nginx/conf.d
+#
+#      # Django와 사용하는 static 폴더
+#      - ./static:/staticfiles
+#    depends_on:
+#      - django
 
   django:
+    ports:
+      - 5552:5552
     # docker hub 업로드한 이미지
     image: korshika/stockmanager-back-django:latest
     container_name: StockManager-Django-Server
