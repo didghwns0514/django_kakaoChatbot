@@ -5,7 +5,7 @@ pip install mysqlclient
 pip install gunicorn
 pip install apscheduler
 pip install selenium
-pip install bs4
+pip install bs4 lxml
 
 python3 manage.py collectstatic --noinput
 python3 manage.py makemigrations
