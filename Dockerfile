@@ -1,11 +1,11 @@
 FROM python:3.9
 
 WORKDIR /usr/src/app
-COPY docker-prep.sh ./
+COPY docker-prep.sh .
 COPY . .
 
 
-RUN docker-prep.sh
+RUN ./docker-prep.sh
 #    "./manage.py", "makemigrations" \
 #    "./manage.py", "migrate" \
 #    "./manage.py", "test"
