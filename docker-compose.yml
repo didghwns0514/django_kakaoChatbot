@@ -24,8 +24,8 @@ services:
 
     # gunicorn를 사용하여 8000번 포트로 서비스
     command: gunicorn --bind 0.0.0.0:5552 django_kakaoChatbot.wsgi:application
-    volumes:
-      # nginx와 사용하는 static 폴더
-      - ./static:/usr/src/app/staticfiles
+#    volumes:
+#      # nginx와 사용하는 static 폴더
+#      - ./static:/usr/src/app/staticfiles
     expose:
       - "5552"
