@@ -16,6 +16,10 @@ services:
 #      - django
 
   django:
+    environment:
+      - DJANGO_SECRET=django-insecure-dgbp!q_yauu-j)udgh*wa(ml-epuw#_&8hh=afgs_ocy_)#vtl
+      - DB_USERNAME=root
+      - DB_PASSWORD=d@12YinYang
     ports:
       - 5552:5552
     # docker hub 업로드한 이미지
