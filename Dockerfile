@@ -18,6 +18,8 @@ RUN ./docker-prep.sh
 
 EXPOSE 5552
 
-ENTRYPOINT ["./docker-startup.sh"]
+#ENTRYPOINT ["./docker-startup.sh"]
 #CMD ["./manage.py","runserver","5552"]
-CMD ["gunicorn","StockManager.wsgi","--bind=0:5552"]
+#CMD ["gunicorn","StockManager.wsgi","--bind=0:8080"]
+#ENTRYPOINT ["./docker-startup.sh"]
+CMD ./docker-startup.sh ; gunicorn StockManager.wsgi --bind=0:5552
