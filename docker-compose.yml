@@ -28,7 +28,8 @@ services:
 
     # gunicorn를 사용하여 8000번 포트로 서비스
     command: >
-      bash -c "python3 manage.py makemigrations
+      bash -c "pip list
+      && python3 manage.py makemigrations
       && python3 manage.py migrate
       && python3 manage.py collectstatic --noinput
       && gunicorn StockManager.wsgi -b 0.0.0.0:5552 "

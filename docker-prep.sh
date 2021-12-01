@@ -7,6 +7,6 @@ pip install -r requirements.txt
 #pip install selenium
 #pip install bs4 lxml
 
-python3 manage.py collectstatic
-python3 manage.py makemigrations
-python3 manage.py migrate
+#python3 manage.py collectstatic
+#python3 manage.py makemigrations
+#python3 manage.py migrate
