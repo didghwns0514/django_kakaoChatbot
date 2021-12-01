@@ -27,7 +27,12 @@ services:
     container_name: StockManager-Django-Server
 
     # gunicorn를 사용하여 8000번 포트로 서비스
-    command: gunicorn --bind 0.0.0.0:5552 django_kakaoChatbot.wsgi:application
+    command: >
+      bash -c "python3 manage.py makemigrations
+      && python3 manage.py migrate
+      && python3 manage.py collectstatic --noinput
+      && gunicorn StockManager.wsgi -b 0.0.0.0:5552 "
+
 #    volumes:
 #      # nginx와 사용하는 static 폴더
 #      - ./static:/usr/src/app/staticfiles

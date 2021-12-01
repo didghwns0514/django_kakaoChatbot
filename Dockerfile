@@ -4,6 +4,10 @@ WORKDIR /usr/src/app
 COPY docker-prep.sh .
 COPY . .
 
+ARG DJANGO_SECRET
+ARG DB_USERNAME
+ARG DB_PASSWORD
+
 RUN chmod +x ./docker-prep.sh
 RUN ./docker-prep.sh
 #    "./manage.py", "makemigrations" \
