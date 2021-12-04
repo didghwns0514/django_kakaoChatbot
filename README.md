@@ -9,7 +9,11 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 ## Reference
 1) [참조1](https://www.dongyeon1201.kr/9026133b-31be-4b58-bcc7-49abbe893044#b530dc75-789d-4e2e-9993-edb2b328c89b)
 2) [참조2](https://django-doc-test-kor.readthedocs.io/en/old_master/intro/tutorial01.html)
+3) [참조3-장고 개발 기본](https://076923.github.io/posts/Python-Django-1/)
 
+## 개발 참조
+1) [App Scheduler](https://ediblepotato.tistory.com/3)
+2) [CORS setting](https://hyeonyeee.tistory.com/65)
 
 **Framework & library used :**
 - Django
@@ -22,6 +26,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 - Server :
   - Service method:
     - will be using **wsgi** or **gunicorn** `(not available yet - will be added in the future)`
+    - Now server is running on Gunicorn!
   - Business logic:
     - used apscheduler library to continuously crawl information on intervals
     - under scheduler, selenium based function is executed to parse stock information from the web

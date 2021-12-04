@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_apscheduler',
     'corsheaders',
+
+    # my apps
+    'appStockInfo',
 ]
 
 MIDDLEWARE = [
@@ -108,10 +111,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# CORS settings
 CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:8888',
                          'http://localhost:8888']
 CORS_ALLOW_CREDENTIALS = True
 
+
+# App scheduler settings
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+SCHEDULER_DEFAULT = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

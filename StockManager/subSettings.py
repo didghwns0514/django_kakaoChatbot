@@ -14,4 +14,3 @@ except:DB_USERNAME = os.environ.get('DB_USERNAME')
 try:DB_PASSWORD = os.environ(['DB_PASSWORD'])
 except:DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
-print(f'DJANGO_SECRET : {DJANGO_SECRET}')
