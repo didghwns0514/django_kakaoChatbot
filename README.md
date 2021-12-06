@@ -12,9 +12,15 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 3) [참조3-장고 개발 기본](https://076923.github.io/posts/Python-Django-1/)
 
 ## 개발 참조
-1) [App Scheduler](https://ediblepotato.tistory.com/3)
+1) Apscheduler 정리
+  1) [App Scheduler](https://ediblepotato.tistory.com/3)
+  2) [Scheduler 사용 예시](https://medium.com/@kevin.michael.horan/scheduling-tasks-in-django-with-the-advanced-python-scheduler-663f17e868e6)
 2) [CORS setting](https://hyeonyeee.tistory.com/65)
-3) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
+3) Static 관련 정리
+  1) [Static 경로 설정 후, template 사용법](https://0ver-grow.tistory.com/912) 
+  2) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
+  3) [Static serving done by whitelabel](https://listed.to/@toolate/6967/heroku-x-django-static)
+
 
 **Framework & library used :**
 - Django

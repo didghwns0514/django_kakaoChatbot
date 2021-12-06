@@ -151,15 +151,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-#STATIC_DIR = os.path.join(BASE_DIR, 'static')
-
-
-print(f'BASE_DIR :{BASE_DIR}')
-#print(f'ROOT_DIR :{ROOT_DIR}')
-print(f'STATIC_URL :{STATIC_URL}')
-# print(f'STATIC_DIR :{STATIC_DIR}')
-print(f'STATICFILES_DIRS :{STATICFILES_DIRS}')
-print(f'STATIC_ROOT :{STATIC_ROOT}')
 
 
 # Default primary key field type
