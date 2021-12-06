@@ -14,6 +14,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 ## 개발 참조
 1) [App Scheduler](https://ediblepotato.tistory.com/3)
 2) [CORS setting](https://hyeonyeee.tistory.com/65)
+3) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
 
 **Framework & library used :**
 - Django
