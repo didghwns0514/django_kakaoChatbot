@@ -145,7 +145,7 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     STATIC_DIR,
 ]
-STATIC_ROOT = os.path.join(ROOT_DIR, '.static_root')
+STATIC_ROOT = os.path.join(STATIC_DIR, '.static_root')
 
 print(f'BASE_DIR :{BASE_DIR}')
 print(f'ROOT_DIR :{ROOT_DIR}')
