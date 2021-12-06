@@ -25,7 +25,7 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 SECRET_KEY = CONFI.DJANGO_SECRET
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['hjyang.iptime.org', 'localhost']
 
@@ -116,6 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:8888',
                          'http://localhost:8888',
                          'https://hjyang.iptime.org',
+                         'https://hjyang.iptime.org:4441',
                          ]
 CORS_ALLOW_CREDENTIALS = True
 
