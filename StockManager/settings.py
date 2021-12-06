@@ -26,7 +26,7 @@ SECRET_KEY = CONFI.DJANGO_SECRET
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['hjyang.iptime.org']
+ALLOWED_HOSTS = ['hjyang.iptime.org', 'localhost']
 
 
 # Application definition
@@ -113,7 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # CORS settings
 CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:8888',
-                         'http://localhost:8888']
+                         'http://localhost:8888',
+                         'hjyang.iptime.org',
+                         ]
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -139,9 +141,9 @@ USE_TZ =  False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
-    STATIC_ROOT,
+    STATIC_DIR,
 ]
 
 # Default primary key field type
