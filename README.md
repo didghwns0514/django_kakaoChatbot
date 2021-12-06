@@ -11,6 +11,9 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 2) [참조2](https://django-doc-test-kor.readthedocs.io/en/old_master/intro/tutorial01.html)
 3) [참조3-장고 개발 기본](https://076923.github.io/posts/Python-Django-1/)
 
+## 중요 참조
+1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
+
 ## 개발 참조
 1) Apscheduler 정리
   1) [App Scheduler](https://ediblepotato.tistory.com/3)
