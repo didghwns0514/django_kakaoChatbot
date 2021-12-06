@@ -1,5 +1,5 @@
 from apscheduler.schedulers.background import BackgroundScheduler
-from jobs import JobDatetime1, JobDatetime2
+from appStockInfo.jobs import JobDatetime1, JobDatetime2
 
 
 def taskStockKR():

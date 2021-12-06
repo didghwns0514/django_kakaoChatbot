@@ -6,6 +6,6 @@ class AppstockinfoConfig(AppConfig):
     name = 'appStockInfo'
 
     def ready(self):
-        from scheduler import taskStockKR, taskStockUS
+        from appStockInfo.scheduler import taskStockKR, taskStockUS
         taskStockKR()
         taskStockUS()
