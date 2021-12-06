@@ -10,7 +10,11 @@ https://docs.djangoproject.com/en/3.2/howto/deployment/wsgi/
 import os
 
 from django.core.wsgi import get_wsgi_application
+from whitenoise import WhiteNoise
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'StockManager.settings')
-
 application = get_wsgi_application()
+
+# https://customer.gabia.com/manual/hosting/12502/12564
+application = WhiteNoise(application, root='/web/project_dir')
+application.add_files('/web/project_dir/static/', prefix='')
