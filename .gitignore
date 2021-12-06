@@ -7,3 +7,4 @@
 *istory.docx
 /.venv/
 /.env
+.static_root/
