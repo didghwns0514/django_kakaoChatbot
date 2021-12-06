@@ -113,10 +113,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # CORS settings
-CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:8888',
-                         'http://localhost:8888',
-                         'https://hjyang.iptime.org',
-                         'https://hjyang.iptime.org:4441',
+CORS_ORIGIN_WHITELIST = [
+                         'http://127.0.0.1:5552',
+                         'http://localhost:5552',
+                         'http://hjyang.iptime.org',
+                         'http://hjyang.iptime.org:4441',
                          ]
 CORS_ALLOW_CREDENTIALS = True
 
