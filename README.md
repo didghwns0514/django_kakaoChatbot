@@ -10,7 +10,9 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 1) [참조1](https://www.dongyeon1201.kr/9026133b-31be-4b58-bcc7-49abbe893044#b530dc75-789d-4e2e-9993-edb2b328c89b)
 2) [참조2](https://django-doc-test-kor.readthedocs.io/en/old_master/intro/tutorial01.html)
 3) [참조3-장고 개발 기본](https://076923.github.io/posts/Python-Django-1/)
-
+4) Test
+  1) [장고 test 기본-1](https://velog.io/@hj8853/Django-Unit-Test)
+  2) [장고 test 기본-2](https://ugaemi.com/tdd/Django-unit-test/)
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
 
@@ -23,7 +25,8 @@ Will provide you `**Real-Time Top Stocks**` at any time.
   1) [Static 경로 설정 후, template 사용법](https://0ver-grow.tistory.com/912) 
   2) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
   3) [Static serving done by whitelabel](https://listed.to/@toolate/6967/heroku-x-django-static)
-
+4) 주식 모듈 관련 정리
+  1) [yahoo finance 정리 1](https://scribblinganything.tistory.com/377)
 
 **Framework & library used :**
 - Django

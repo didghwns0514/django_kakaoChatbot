@@ -41,9 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_apscheduler',
     'corsheaders',
+    'rest_framework', # DRF를 앱으로 등록
+    'rest_framework_swagger',
+    'rest_framework.authtoken',
 
     # my apps
     'appStockInfo',
+    'appRestAPI',
+    'appStockPrediction',
 ]
 
 MIDDLEWARE = [
@@ -79,6 +84,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'StockManager.wsgi.application'
 
+
+# Rest API framework
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -122,7 +134,24 @@ CORS_ORIGIN_WHITELIST = [
                          'http://hjyang.iptime.org:4441',
                          ]
 CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'PATCH',
+    'POST',
+    'PUT'
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # App scheduler settings
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
