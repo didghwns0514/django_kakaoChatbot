@@ -5,12 +5,33 @@ import yfinance as yf
 
 class MainWrapper:
 
-    def __init__(self):pass
+    def __init__(self):
+
+        self.stockList = GetStockList()
+        self.stockInfo = GetStockInfo()
 
 class GetStockList:
     def __init__(self):
-        self.KOSDAQ = stock.get_market_ticker_list(market="KOSDAQ")
-        self.KOSPI = stock.get_market_ticker_list(market="KOSPI")
+        self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
+        self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
+        self.tickerToName = {}
+
+        self.getTickerNameKOSDAQ()
+        self.getTickerNameKOSPI()
+
+    def getTickerNameKOSDAQ(self):
+        for stockTicker in self.KOSDAQ:
+            try:
+                self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
+            except:
+                self.tickerToName[stockTicker] = stockTicker
+
+    def getTickerNameKOSPI(self):
+        for stockTicker in self.KOSPI:
+            try:
+                self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
+            except:
+                self.tickerToName[stockTicker] = stockTicker
 
     def __str__(self) -> str:
         return f'KOSDAQ : \n {self.KOSDAQ[:10]}  \nKOSPI : \n {self.KOSPI[:10]}'
@@ -30,43 +51,53 @@ class GetStockInfo:
         for stockID in listKOSDAQ:
 
             try:
-
                 tmpData = yf.download(
                     stockID + ".KQ",
                     start=self.setTimeFormat(self.createStartDate()),
-                    timeout=0.5,
+                    timeout=1,
                     progress=False,
                     show_errors=False,
                     threads=False
                 )
-                print(f'stockID - success : {stockID}')
-                self.infoBasicKOSDAQ[stockID] = tmpData
-            except:print(f'stockID - false : {stockID}')
 
+                self.infoBasicKOSDAQ[stockID] = tmpData
+            except:pass
 
 
     def getTickerKOSDAQ(self, listKOSDAQ:list):
         for stockID in listKOSDAQ:
-            self.infoTickerKOSDAQ[stockID] = yf.Ticker(stockID+".KQ")
+            try:
+                tmpData = yf.Ticker(
+                    stockID+".KQ"
+
+                )
+                self.infoTickerKOSDAQ[stockID] = tmpData
+            except:pass
 
     def getBasicKOSPI(self, listKOSPI:list):
 
         for stockID in listKOSPI:
-            tmpData = yf.download(
-                stockID + ".KS",
-                start=self.setTimeFormat(self.createStartDate()),
-                timeout=0.2,
-                threads=False
-            )
-            print(f'stockID : {stockID}')
-            self.infoBasicKOSPI[stockID] = tmpData
+            try:
+                tmpData = yf.download(
+                    stockID + ".KS",
+                    start=self.setTimeFormat(self.createStartDate()),
+                    timeout=1,
+                    progress=False,
+                    show_errors=False,
+                    threads=False
+                )
+
+                self.infoBasicKOSPI[stockID] = tmpData
+            except:pass
 
     def getTickerKOSPI(self, listKOSPI:list):
         for stockID in listKOSPI:
-            self.infoTickerKOSPI[stockID] = yf.download(
-                stockID + ".KS",
-                start=self.setTimeFormat(self.createStartDate())
-            )
+            try:
+                self.infoTickerKOSPI[stockID] = yf.download(
+                    stockID + ".KS",
+                    start=self.setTimeFormat(self.createStartDate())
+                )
+            except:pass
 
     def createStartDate(self):
         return datetime.today() - timedelta(days=GetStockInfo.TOTAL_REQUEST_DATE_LENGTH)

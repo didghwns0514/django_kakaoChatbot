@@ -20,7 +20,7 @@ class StockItemList(models.Model):
 
 class StockItem(models.Model):
     stock_item_name = models.ForeignKey(StockItemList, on_delete=models.CASCADE)
-    reg_date = models.DateField(default=timezone.now(), null=True)
+    reg_date = models.DateField(default=timezone.now, null=True)
     high = models.FloatField(default=0.0)
     low = models.FloatField(default=0.0)
     open = models.FloatField(default=0.0)

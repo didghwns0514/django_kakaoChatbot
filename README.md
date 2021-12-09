@@ -13,6 +13,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 4) Test
   1) [장고 test 기본-1](https://velog.io/@hj8853/Django-Unit-Test)
   2) [장고 test 기본-2](https://ugaemi.com/tdd/Django-unit-test/)
+  3) [장고 test 기본-3](https://velog.io/@maintain0404/Django에서-Test하기)
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
 
