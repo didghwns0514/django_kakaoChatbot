@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework', # DRF를 앱으로 등록
     'rest_framework_swagger',
     'rest_framework.authtoken',
+    'log_viewer', # Viewer for logs
 
     # my apps
     'appStockInfo',
@@ -253,3 +254,6 @@ LOGGING = {
         },
     }
 }
+LOG_VIEWER_FILES = ['mysite']
+LOG_VIEWER_FILES_PATTERN = '*.log'
+LOG_VIEWER_FILES_DIR = 'logs/'

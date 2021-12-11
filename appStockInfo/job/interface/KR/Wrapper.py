@@ -1,3 +1,10 @@
+from django.db.models import Q
+from appStockInfo.models import (
+    StockTick,
+    StockItemList,
+    StockItem
+)
+
 from pykrx import stock
 from datetime import datetime, timedelta
 import yfinance as yf
@@ -14,13 +21,14 @@ class MainWrapper:
         self.stockList.doAction()
         self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
-    def createStockTick(self, listStocks ):
+    def createStockTick(self, listStocks:list ):
         """
         create ticker CRUD
         > if info is not provided, set to False
         > if Ticker doesn't exist, add
         """
-        pass
+        for tick in listStocks:
+            pass
 
     def createMapTickerToName(self):
         """

@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('appStockInfo/', include('appStockInfo.urls')),
     path('appRestAPI/', include('appRestAPI.urls')),
+    path('logs/', include('log_viewer.urls')),
 ]
