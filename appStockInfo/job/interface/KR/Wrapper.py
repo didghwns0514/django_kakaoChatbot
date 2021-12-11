@@ -10,12 +10,31 @@ class MainWrapper:
         self.stockList = GetStockList()
         self.stockInfo = GetStockInfo()
 
+    def doAction(self):
+        pass
+
+    def createTicker(self):
+        """
+        create ticker CRUD
+        > if info is not provided, set to False
+        > if Ticker doesn't exist, add
+        """
+        pass
+
+    def createMapTickerToName(self):
+        """
+        create ticker to name CRUD
+        > if Ticker exists, and Name isNot provided, it will be replaced with a ticker
+        """
+        pass
+
 class GetStockList:
     def __init__(self):
         self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
         self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
         self.tickerToName = {}
 
+    def doAction(self):
         self.getTickerNameKOSDAQ()
         self.getTickerNameKOSPI()
 
@@ -45,6 +64,17 @@ class GetStockInfo:
         self.infoBasicKOSPI = {}
         self.infoTickerKOSDAQ = {}
         self.infoTickerKOSPI = {}
+        self.infoYahooKOSDAQ = {}
+        self.infoYahooKOSPI = {}
+
+    def doAction(self, listKOSPI:list, listKOSDAQ:list):
+        self.getBasicKOSPI(listKOSPI)
+        self.getTickerKOSPI(listKOSPI)
+        self.getYahooKOSPI(listKOSPI)
+        self.getBasicKOSDAQ(listKOSDAQ)
+        self.getTickerKOSDAQ(listKOSDAQ)
+        self.getYahooKOSDAQ(listKOSDAQ)
+
 
     def getBasicKOSDAQ(self, listKOSDAQ:list):
 
@@ -57,7 +87,8 @@ class GetStockInfo:
                     timeout=1,
                     progress=False,
                     show_errors=False,
-                    threads=False
+                    threads=False,
+
                 )
 
                 self.infoBasicKOSDAQ[stockID] = tmpData
@@ -67,11 +98,20 @@ class GetStockInfo:
     def getTickerKOSDAQ(self, listKOSDAQ:list):
         for stockID in listKOSDAQ:
             try:
-                tmpData = yf.Ticker(
-                    stockID+".KQ"
-
-                )
+                tmpData = stock.get_market_fundamental(
+                                                       self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                                                       self.setTimeFormat(datetime.today(), haveSeparator=False),
+                                                       stockID, freq="d")
                 self.infoTickerKOSDAQ[stockID] = tmpData
+            except:pass
+
+    def getYahooKOSDAQ(self, listKOSDAQ:list):
+        for stockID in listKOSDAQ:
+            try:
+                tmpData = yf.Ticker(
+                    stockID+".KQ",
+                )
+                self.infoYahooKOSDAQ[stockID] = tmpData
             except:pass
 
     def getBasicKOSPI(self, listKOSPI:list):
@@ -93,18 +133,44 @@ class GetStockInfo:
     def getTickerKOSPI(self, listKOSPI:list):
         for stockID in listKOSPI:
             try:
-                self.infoTickerKOSPI[stockID] = yf.download(
-                    stockID + ".KS",
-                    start=self.setTimeFormat(self.createStartDate())
-                )
+                tmpData = stock.get_market_fundamental(
+                                                       self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                                                       self.setTimeFormat(datetime.today(), haveSeparator=False),
+                                                       stockID, freq="d",
+                                                       )
+                self.infoTickerKOSPI[stockID] = tmpData
             except:pass
 
-    def createStartDate(self):
-        return datetime.today() - timedelta(days=GetStockInfo.TOTAL_REQUEST_DATE_LENGTH)
+    def getYahooKOSPI(self, listKOSPI:list):
+        for stockID in listKOSPI:
+            try:
+                tmpData = yf.Ticker(
+                    stockID+".KS",
+                )
+                self.infoYahooKOSPI[stockID] = tmpData
+            except:pass
 
-    def setTimeFormat(self, datetimeObject):
-        return datetimeObject.strftime("%Y-%m-%d")
+    def createStartDate(self, normDate=datetime.today()):
+        return normDate - timedelta(days=GetStockInfo.TOTAL_REQUEST_DATE_LENGTH)
 
+    def setTimeFormat(self, datetimeObject, haveSeparator=True):
+        if haveSeparator:
+            return datetimeObject.strftime("%Y-%m-%d")
+        else:
+            return datetimeObject.strftime("%Y%m%d")
 
 if __name__ == '__main__':
     pass
+
+"""
+        # PER
+        'forwardPE'
+        # PBR
+        
+        # ROE
+        'returnOnEquity'
+        # ROA
+        'returnOnAssets'
+        # industry
+        'industry'
+"""

@@ -9,4 +9,5 @@ def KRStocks():
 
 
 def USStocks():
+	"""Update US stock info"""
 	pass

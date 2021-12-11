@@ -14,6 +14,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
   1) [장고 test 기본-1](https://velog.io/@hj8853/Django-Unit-Test)
   2) [장고 test 기본-2](https://ugaemi.com/tdd/Django-unit-test/)
   3) [장고 test 기본-3](https://velog.io/@maintain0404/Django에서-Test하기)
+
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
 
@@ -21,6 +22,8 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 1) Apscheduler 정리
   1) [App Scheduler](https://ediblepotato.tistory.com/3)
   2) [Scheduler 사용 예시](https://medium.com/@kevin.michael.horan/scheduling-tasks-in-django-with-the-advanced-python-scheduler-663f17e868e6)
+  3) [Cronjob 추가하기 1](https://hello-bryan.tistory.com/216)
+  4) [Cronjob 추가하기 2](https://m.blog.naver.com/varkiry05/221257249284~~~~)
 2) [CORS setting](https://hyeonyeee.tistory.com/65)
 3) Static 관련 정리
   1) [Static 경로 설정 후, template 사용법](https://0ver-grow.tistory.com/912) 
