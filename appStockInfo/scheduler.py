@@ -4,7 +4,7 @@ from appStockInfo.jobs import serviceKRStocks, serviceUSStocks
 
 def taskStockKR():
     scheduler = BackgroundScheduler(timezone="Asia/Seoul")
-    scheduler.add_job(serviceKRStocks, 'cron', hour="3,19", id="KRStocks" )
+    scheduler.add_job(serviceKRStocks, 'cron', hour="3,19", minute="37", id="KRStocks" )
 
     scheduler.start()
 

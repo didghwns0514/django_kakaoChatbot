@@ -256,4 +256,7 @@ LOGGING = {
 }
 LOG_VIEWER_FILES = ['mysite']
 LOG_VIEWER_FILES_PATTERN = '*.log'
-LOG_VIEWER_FILES_DIR = 'logs/'
+LOG_VIEWER_FILES_DIR = BASE_DIR / 'logs/'
+# LOG_VIEWER_PAGE_LENGTH = 25       # total log lines per-page
+# LOG_VIEWER_MAX_READ_LINES = 1000  # total log lines will be read
+# LOG_VIEWER_PATTERNS = ['[INFO]', '[DEBUG]', '[WARNING]', '[ERROR]', '[CRITICAL]']
