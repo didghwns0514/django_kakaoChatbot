@@ -11,9 +11,10 @@ class MainWrapper:
         self.stockInfo = GetStockInfo()
 
     def doAction(self):
-        pass
+        self.stockList.doAction()
+        self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
-    def createTicker(self):
+    def createStockTick(self, listStocks ):
         """
         create ticker CRUD
         > if info is not provided, set to False
@@ -163,14 +164,14 @@ if __name__ == '__main__':
     pass
 
 """
-        # PER
-        'forwardPE'
-        # PBR
-        
-        # ROE
-        'returnOnEquity'
-        # ROA
-        'returnOnAssets'
-        # industry
-        'industry'
+# PER
+'forwardPE'
+# PBR
+
+# ROE
+'returnOnEquity'
+# ROA
+'returnOnAssets'
+# industry
+'industry'
 """

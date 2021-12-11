@@ -1,16 +1,16 @@
 from apscheduler.schedulers.background import BackgroundScheduler
-from appStockInfo.jobs import KRStocks, USStocks
+from appStockInfo.jobs import serviceKRStocks, serviceUSStocks
 
 
 def taskStockKR():
     scheduler = BackgroundScheduler(timezone="Asia/Seoul")
-    scheduler.add_job(KRStocks, 'cron', hour="2,19", id="KRStocks" )
+    scheduler.add_job(serviceKRStocks, 'cron', hour="3,19", id="KRStocks" )
 
     scheduler.start()
 
 
 def taskStockUS():
     scheduler = BackgroundScheduler(timezone="Asia/Seoul")
-    scheduler.add_job(USStocks,'cron', hour="17,19", id="USStocks")
+    scheduler.add_job(serviceUSStocks,'cron', hour="17,19", id="USStocks")
 
     scheduler.start()

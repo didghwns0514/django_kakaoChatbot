@@ -3,26 +3,33 @@ from django.utils import timezone
 
 # Create your models here.
 
-class StockMarket(models.Model):
-    stock_market_name = models.CharField(primary_key=True, max_length=200)
+class StockTick(models.Model):
+    stock_tick = models.CharField(primary_key=True, max_length=200, unique=True)
+    stock_marketName = models.CharField(max_length=200, blank=False)
+    stock_isInfoAvailable = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.stock_market_name
+        return self.stock_tick
 
 
 class StockItemList(models.Model):
-    stock_market_name = models.ForeignKey(StockMarket, on_delete=models.CASCADE)
-    stock_item_name = models.CharField(primary_key=True, max_length=200)
-    stock_item_code = models.CharField(max_length=200)
+    stock_tick = models.ForeignKey(StockTick, on_delete=models.CASCADE, default="dummy")
+    stock_name = models.CharField(primary_key=True, max_length=200)
 
     def __str__(self):
-        return self.stock_item_name
+        return self.stock_name
 
 class StockItem(models.Model):
-    stock_item_name = models.ForeignKey(StockItemList, on_delete=models.CASCADE)
+    stock_name = models.ForeignKey(StockItemList, on_delete=models.CASCADE,
+                                   default="dummy")
     reg_date = models.DateField(default=timezone.now, null=True)
     high = models.FloatField(default=0.0)
     low = models.FloatField(default=0.0)
     open = models.FloatField(default=0.0)
     close = models.FloatField(default=0.0)
     volume = models.FloatField(default=0.0)
+
+    per = models.FloatField(default=0.0)
+    pbr = models.FloatField(default=0.0)
+    roe = models.FloatField(default=0.0)
+    roa = models.FloatField(default=0.0)

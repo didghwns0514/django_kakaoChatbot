@@ -4,7 +4,6 @@ from django.test import TestCase
 from appStockInfo.job.interface.KR.Wrapper import (
     GetStockInfo, GetStockList
 )
-from appStockInfo.scheduler import taskStockUS, taskStockKR
 from datetime import datetime, timedelta
 import time
 
@@ -122,7 +121,7 @@ class GetStockInfoTest(TestCase):
         with open(
                 os.path.join(
                     root,
-                    'testFolder', 'stockList.p'
+                    'testMockData', 'stockList.p'
                 ), 'wb') as f:
             pickle.dump(stockList, f)
             print(f'successful StockList class save')
@@ -130,7 +129,7 @@ class GetStockInfoTest(TestCase):
         with open(
                 os.path.join(
                     root,
-                    'testFolder', 'stockInfo.p'
+                    'testMockData', 'stockInfo.p'
                 ), 'wb') as f:
             pickle.dump(stockInfo, f)
             print(f'successful StockInfo class save')
@@ -143,7 +142,7 @@ class GetScheduler(TestCase):
 
     IS_SUCCESS = False
 
-    @unittest.skip("Apscheduler functionality test done - Pass")
+    #@unittest.skip("Apscheduler functionality test done - Pass")
     def test_taskStockKR(self):
         from apscheduler.schedulers.background import BackgroundScheduler
         from datetime import datetime, timedelta

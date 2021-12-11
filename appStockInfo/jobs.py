@@ -1,13 +1,14 @@
-
-from django.db.models import Q
 from datetime import datetime
+import logging
+logger = logging.getLogger('my')
 
-
-def KRStocks():
+def serviceKRStocks():
 	"""Update KR stock info"""
+	logger.info("serviceKRStocks - called from apscheduler")
 	pass
 
 
-def USStocks():
+def serviceUSStocks():
 	"""Update US stock info"""
+	logger.info("serviceUSStocks - called from apscheduler")
 	pass

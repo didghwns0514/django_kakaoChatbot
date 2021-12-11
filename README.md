@@ -10,10 +10,16 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 1) [참조1](https://www.dongyeon1201.kr/9026133b-31be-4b58-bcc7-49abbe893044#b530dc75-789d-4e2e-9993-edb2b328c89b)
 2) [참조2](https://django-doc-test-kor.readthedocs.io/en/old_master/intro/tutorial01.html)
 3) [참조3-장고 개발 기본](https://076923.github.io/posts/Python-Django-1/)
-4) Test
+4) Test - 기본
   1) [장고 test 기본-1](https://velog.io/@hj8853/Django-Unit-Test)
   2) [장고 test 기본-2](https://ugaemi.com/tdd/Django-unit-test/)
   3) [장고 test 기본-3](https://velog.io/@maintain0404/Django에서-Test하기)
+5) Test - model
+  1) [장고 test Model-1](https://dev-yakuza.posstree.com/ko/django/test/models/)
+6) User Model
+  1) [장고 User Model-1](https://dev-yakuza.posstree.com/ko/django/custom-user-model/)
+7) Logging in Django
+  1) [장고 logging-1](https://hikoding.tistory.com/49)
 
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
