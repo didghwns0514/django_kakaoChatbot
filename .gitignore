@@ -10,3 +10,5 @@
 .static_root/
 /logs/
 /templates/
+/staticfiles/
+/static/
