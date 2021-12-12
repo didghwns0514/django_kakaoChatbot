@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'appStockInfo',
     'appRestAPI',
     'appStockPrediction',
+    'appStockAccount'
 ]
 
 MIDDLEWARE = [
