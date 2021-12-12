@@ -20,6 +20,8 @@ Will provide you `**Real-Time Top Stocks**` at any time.
   1) [장고 User Model-1](https://dev-yakuza.posstree.com/ko/django/custom-user-model/)
 7) Logging in Django
   1) [장고 logging-1](https://hikoding.tistory.com/49)
+8) ORM
+  1) [장고 ORM-1](https://velog.io/@ikswary/Q-F-expression)
 
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)

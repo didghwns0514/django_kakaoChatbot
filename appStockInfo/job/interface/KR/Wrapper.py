@@ -1,7 +1,7 @@
-from django.db.models import Q
+from django.db.models import Q, F
 from appStockInfo.models import (
     StockTick,
-    StockItemList,
+    StockItemListName,
     StockItem
 )
 
@@ -21,31 +21,85 @@ class MainWrapper:
         self.stockList.doAction()
         self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
-    def createStockTick(self, listStocks:list ):
+    def createStockTick(self, listStocks:list, marketName:str='Dummy' ):
         """
         create ticker CRUD
         > if info is not provided, set to False
         > if Ticker doesn't exist, add
-        """
-        for tick in listStocks:
-            pass
 
-    def createMapTickerToName(self):
+        [ORM]
+        stock_tick : Stock 코드
+        stock_marketName : 등록된 마켓 이름
+        stock_isInfoAvailable : Fetch된 market 데이터 존재하는 경우
+            -> StockItem 등록시, 데이터 없으면 False로 다시 세팅
+        """
+
+        StockTick.objects.all().update(stock_isInfoAvailable=False)
+
+        for tick in listStocks:
+            stockTickFilter = StockTick.objects.filter(stock_tick=tick)
+            if not stockTickFilter: # Not existing in DB
+                StockTick.objects.create(
+                    stock_tick=str(tick),
+                    stock_marketName=marketName,
+                    stock_isInfoAvailable=True
+                )
+            else: # Already in DB
+                stockTickFilter.update(stock_isInfoAvailable=True)
+
+
+    def createStockItemListName(self, listStocks:list, marketName:str='Dummy'):
         """
         create ticker to name CRUD
         > if Ticker exists, and Name isNot provided, it will be replaced with a ticker
+
+        [ORM]
+        stock_tick : ForeignKey - Stock 코드
+        stock_name : 실제 종목 이름 Mapping 값
         """
+        for tick in listStocks:
+            stockTickFilter = StockItemListName.objects.filter(stock_tick=tick)
+            if tick not in self.stockList.tickerToName:
+                tmpNameData = str(tick)
+            else:
+                tmpNameData = self.stockList.tickerToName[tick]
+            if not stockTickFilter: # Not existing in DB
+                tmpStockTick = StockTick.objects.filter(
+                        stock_tick=tick,
+                        # stock_marketName=marketName,
+                        # stock_isInfoAvailable=False
+                    )
+                if not tmpStockTick:
+                    tmpStockTick = StockTick.objects.create(
+                        stock_tick=tick,
+                        stock_marketName=marketName,
+                        stock_isInfoAvailable=False
+                    )
+                else:
+                    tmpStockTick = StockTick.objects.get(stock_tick=tick)
+                StockItemListName.objects.create(
+                    stock_tick=tmpStockTick,
+                    stock_name=tmpNameData
+                )
+            else: # Already in DB
+                pass
+
+    def createStockItem(self):
         pass
 
 class GetStockList:
     def __init__(self):
-        self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
+        self.KOSDAQ = list(set(stock.get_market_ticker_list(
+                                    market="KOSDAQ",
+
+                                    )))
         self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
         self.tickerToName = {}
 
     def doAction(self):
         self.getTickerNameKOSDAQ()
         self.getTickerNameKOSPI()
+
 
     def getTickerNameKOSDAQ(self):
         for stockTicker in self.KOSDAQ:
@@ -83,7 +137,6 @@ class GetStockInfo:
         self.getBasicKOSDAQ(listKOSDAQ)
         self.getTickerKOSDAQ(listKOSDAQ)
         self.getYahooKOSDAQ(listKOSDAQ)
-
 
     def getBasicKOSDAQ(self, listKOSDAQ:list):
 
@@ -182,4 +235,6 @@ if __name__ == '__main__':
 'returnOnAssets'
 # industry
 'industry'
+# sector
+'sector'
 """

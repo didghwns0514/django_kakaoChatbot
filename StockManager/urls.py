@@ -21,4 +21,5 @@ urlpatterns = [
     path('appStockInfo/', include('appStockInfo.urls')),
     path('appRestAPI/', include('appRestAPI.urls')),
     path('logs/', include('log_viewer.urls')),
+    path('accounts/', include('appStockAccount.urls')),
 ]

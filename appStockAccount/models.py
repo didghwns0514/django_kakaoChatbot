@@ -14,3 +14,7 @@ class User(models.Model):
 
     def __str__(self):
         return self.user_name
+
+class MyStocks(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, default="dummy")
+    stock_number = models.IntegerField(default=0)

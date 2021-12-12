@@ -15,3 +15,4 @@ pip install -r requirements.txt
 mkdir static
 mkdir staticfiles
 mkdir logs
+mkdir templates

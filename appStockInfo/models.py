@@ -4,7 +4,7 @@ from django.utils import timezone
 # Create your models here.
 
 class StockTick(models.Model):
-    stock_tick = models.CharField(primary_key=True, max_length=200, unique=True)
+    stock_tick = models.CharField(primary_key=True, max_length=200)
     stock_marketName = models.CharField(max_length=200, blank=False)
     stock_isInfoAvailable = models.BooleanField(default=False)
 
@@ -12,16 +12,16 @@ class StockTick(models.Model):
         return self.stock_tick
 
 
-class StockItemList(models.Model):
-    stock_tick = models.ForeignKey(StockTick, on_delete=models.CASCADE, default="dummy")
-    stock_name = models.CharField(primary_key=True, max_length=200)
+class StockItemListName(models.Model):
+    stock_tick = models.ForeignKey(StockTick, on_delete=models.CASCADE, default="Dummy")
+    stock_name = models.CharField(default="DummyName", max_length=200)
 
     def __str__(self):
         return self.stock_name
 
 class StockItem(models.Model):
-    stock_name = models.ForeignKey(StockItemList, on_delete=models.CASCADE,
-                                   default="dummy")
+    stock_name = models.ForeignKey(StockItemListName, on_delete=models.CASCADE,
+                                   default="Dummy")
     reg_date = models.DateField(default=timezone.now, null=True)
     high = models.FloatField(default=0.0)
     low = models.FloatField(default=0.0)

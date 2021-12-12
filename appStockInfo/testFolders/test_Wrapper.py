@@ -2,7 +2,7 @@ import unittest
 
 from django.test import TestCase
 from appStockInfo.job.interface.KR.Wrapper import (
-    GetStockInfo, GetStockList
+    GetStockInfo, GetStockList, MainWrapper
 )
 from datetime import datetime, timedelta
 import time
@@ -104,18 +104,21 @@ class GetStockInfoTest(TestCase):
 
         print(f'tmpStockData : {tmpStockData}')
 
-    @unittest.skip("Data generation done - Pass")
+    #@unittest.skip("Data generation done - Pass")
     def test_mockDataGeneration(self):
         import pickle, os
         from pathlib import Path
 
+        print(f'Start mock data generation!')
         root = Path(__file__).resolve().parent
 
         stockList = GetStockList()
         stockList.doAction()
+        print(f'Finished mock data GetStockList!')
 
         stockInfo = GetStockInfo()
         stockInfo.doAction(stockList.KOSPI, stockList.KOSDAQ)
+        print(f'Finished mock data GetStockInfo!')
 
         startTime = time.time()
         with open(
@@ -142,7 +145,7 @@ class GetScheduler(TestCase):
 
     IS_SUCCESS = False
 
-    #@unittest.skip("Apscheduler functionality test done - Pass")
+    @unittest.skip("Apscheduler functionality test done - Pass")
     def test_taskStockKR(self):
         from apscheduler.schedulers.background import BackgroundScheduler
         from datetime import datetime, timedelta
@@ -172,3 +175,4 @@ class GetScheduler(TestCase):
                 break
 
         self.assertEquals(GetScheduler.IS_SUCCESS, True)
+
