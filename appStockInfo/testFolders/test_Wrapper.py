@@ -110,7 +110,7 @@ class GetStockInfoTest(TestCase):
         from pathlib import Path
 
         print(f'Start mock data generation!')
-        root = Path(__file__).resolve().parent
+        root = Path(__file__).resolve().parent.parent
 
         stockList = GetStockList()
         stockList.doAction()
@@ -139,6 +139,13 @@ class GetStockInfoTest(TestCase):
 
         endTime = time.time() - startTime
         print(f'total execution time : {endTime}')
+
+    @unittest.skip
+    def test_getFinanceData(self):
+        getStockInfo = GetStockInfo()
+        getStockInfo.getFinanceData()
+
+        print(f'finance data obtained : \n{getStockInfo.infoFinanceData}')
 
 
 class GetScheduler(TestCase):

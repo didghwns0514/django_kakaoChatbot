@@ -38,8 +38,10 @@ Will provide you `**Real-Time Top Stocks**` at any time.
   2) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
   3) [Static serving done by whitelabel](https://listed.to/@toolate/6967/heroku-x-django-static)
 4) 주식 모듈 관련 정리
-  1) [yahoo finance 정리 1](https://scribblinganything.tistory.com/377)
-
+  1) Yahoo
+    1) [yahoo finance 정리 1](https://scribblinganything.tistory.com/377)
+  2) Finance Data Reader
+    2) [Finance Data Reader 정리 1](https://mokeya.tistory.com/72)
 **Framework & library used :**
 - Django
 - Frontend : no webpage yet (communicates with Kakao API-chatbot with JSON format)

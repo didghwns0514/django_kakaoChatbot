@@ -118,6 +118,7 @@ class CreateKRStocks(TestCase):
         self.assertEqual(str(readDummy2.stock_name), dummy2_tick)
         self.assertEqual(str(readDummy2.stock_tick), dummy2_tick)
 
+    @unittest.skip
     def test_createStockItemYahooInfo(self):
         import pickle, os
         import copy

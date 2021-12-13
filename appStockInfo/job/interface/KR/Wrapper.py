@@ -4,10 +4,15 @@ from appStockInfo.models import (
     StockItemListName,
     StockItem
 )
+import ConfigFile as CONF
 
 from pykrx import stock
+# import yfinance
+
 from datetime import datetime, timedelta
-import yfinance as yf
+import pandas as pd
+import requests as rq
+from io import BytesIO
 
 
 class MainWrapper:
@@ -120,37 +125,40 @@ class GetStockList:
 
 
 class GetStockInfo:
-    TOTAL_REQUEST_DATE_LENGTH = 10
+    TOTAL_REQUEST_DATE_LENGTH = CONF.TOTAL_REQUEST_DATE_LENGTH
 
     def __init__(self):
         self.infoBasicKOSDAQ = {}
         self.infoBasicKOSPI = {}
         self.infoTickerKOSDAQ = {}
         self.infoTickerKOSPI = {}
-        self.infoYahooKOSDAQ = {}
-        self.infoYahooKOSPI = {}
+
+        self.infoFinanceData = None
 
     def doAction(self, listKOSPI:list, listKOSDAQ:list):
         self.getBasicKOSPI(listKOSPI)
         self.getTickerKOSPI(listKOSPI)
-        self.getYahooKOSPI(listKOSPI)
+
         self.getBasicKOSDAQ(listKOSDAQ)
         self.getTickerKOSDAQ(listKOSDAQ)
-        self.getYahooKOSDAQ(listKOSDAQ)
+
+    def getFinanceData(self):
+        """업종 데이터"""
+        tmpData =  FinaceInformation("KRX")
+        self.infoFinanceData = tmpData
+
+
 
     def getBasicKOSDAQ(self, listKOSDAQ:list):
 
         for stockID in listKOSDAQ:
 
             try:
-                tmpData = yf.download(
-                    stockID + ".KQ",
-                    start=self.setTimeFormat(self.createStartDate()),
-                    timeout=1,
-                    progress=False,
-                    show_errors=False,
-                    threads=False,
-
+                tmpData = stock.get_market_ohlcv_by_date(
+                    fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                    todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
+                    ticker=stockID,
+                    name_display=False
                 )
 
                 self.infoBasicKOSDAQ[stockID] = tmpData
@@ -167,26 +175,17 @@ class GetStockInfo:
                 self.infoTickerKOSDAQ[stockID] = tmpData
             except:pass
 
-    def getYahooKOSDAQ(self, listKOSDAQ:list):
-        for stockID in listKOSDAQ:
-            try:
-                tmpData = yf.Ticker(
-                    stockID+".KQ",
-                )
-                self.infoYahooKOSDAQ[stockID] = tmpData
-            except:pass
+
 
     def getBasicKOSPI(self, listKOSPI:list):
 
         for stockID in listKOSPI:
             try:
-                tmpData = yf.download(
-                    stockID + ".KS",
-                    start=self.setTimeFormat(self.createStartDate()),
-                    timeout=1,
-                    progress=False,
-                    show_errors=False,
-                    threads=False
+                tmpData = stock.get_market_ohlcv_by_date(
+                    fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                    todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
+                    ticker=stockID,
+                    name_display=False
                 )
 
                 self.infoBasicKOSPI[stockID] = tmpData
@@ -203,14 +202,6 @@ class GetStockInfo:
                 self.infoTickerKOSPI[stockID] = tmpData
             except:pass
 
-    def getYahooKOSPI(self, listKOSPI:list):
-        for stockID in listKOSPI:
-            try:
-                tmpData = yf.Ticker(
-                    stockID+".KS",
-                )
-                self.infoYahooKOSPI[stockID] = tmpData
-            except:pass
 
     def createStartDate(self, normDate=datetime.today()):
         return normDate - timedelta(days=GetStockInfo.TOTAL_REQUEST_DATE_LENGTH)
@@ -220,6 +211,38 @@ class GetStockInfo:
             return datetimeObject.strftime("%Y-%m-%d")
         else:
             return datetimeObject.strftime("%Y%m%d")
+
+
+def FinaceInformation(market=None):
+    # https://wg-cy.tistory.com/54?category=1000874
+
+    # generate.cmd에서 Request URL과 동일
+
+    # generate.cmd에서 Form Data와 동일
+
+    # 헤더 부분에 리퍼러(Referer)를 추가합니다.
+    # 리퍼러란 링크를 통해서 각각의 웹사이트로 방문할 때 남는 흔적입니다. (로봇으로 인식을 하지 않게 하기 위함.)
+    headers = {'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader'}
+
+    otp = rq.post(CONF.KRX__GEN_OPT_URL, CONF.KRX__GEN_OPT_DATA_KOSPI, headers=headers).text
+    # download.cmd 에서 General의 Request URL 부분
+    down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
+    down_sector_KS = rq.post(down_url, {'code': otp}, headers=headers)
+    sector_KS = pd.read_csv(BytesIO(down_sector_KS.content), encoding='EUC-KR')
+
+
+    otp = rq.post(CONF.KRX__GEN_OPT_URL, CONF.KRX__GEN_OPT_DATA_KOSDAQ, headers=headers).text
+    down_sector_KQ = rq.post(down_url, {'code': otp}, headers=headers)
+    sector_KQ = pd.read_csv(BytesIO(down_sector_KQ.content), encoding='EUC-KR')
+
+    print(F'sector_KS : {sector_KS.head(10)}')
+    print(f'type(sector_KS) : {type(sector_KS)}')
+    print(f'len(sector_KS) : {len(sector_KS)}')
+    print(F'sector_KQ : {sector_KQ.head(10)}')
+
+    tmpData = sector_KS.append(sector_KQ)
+    return tmpData
+
 
 if __name__ == '__main__':
     pass
@@ -237,4 +260,14 @@ if __name__ == '__main__':
 'industry'
 # sector
 'sector'
+
+    # def getYahooKOSDAQ(self, listKOSDAQ:list):
+    #     for stockID in listKOSDAQ:
+    #         try:
+    #             tmpData = yf.Ticker(
+    #                 stockID+".KQ",
+    #             )
+    #             self.infoYahooKOSDAQ[stockID] = tmpData
+    #         except:pass
+
 """
