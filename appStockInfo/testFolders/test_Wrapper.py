@@ -104,7 +104,7 @@ class GetStockInfoTest(TestCase):
 
         print(f'tmpStockData : {tmpStockData}')
 
-    #@unittest.skip("Data generation done - Pass")
+    @unittest.skip("Data generation done - Pass")
     def test_mockDataGeneration(self):
         import pickle, os
         from pathlib import Path

@@ -147,8 +147,6 @@ class GetStockInfo:
         tmpData =  FinaceInformation("KRX")
         self.infoFinanceData = tmpData
 
-
-
     def getBasicKOSDAQ(self, listKOSDAQ:list):
 
         for stockID in listKOSDAQ:
@@ -235,10 +233,10 @@ def FinaceInformation(market=None):
     down_sector_KQ = rq.post(down_url, {'code': otp}, headers=headers)
     sector_KQ = pd.read_csv(BytesIO(down_sector_KQ.content), encoding='EUC-KR')
 
-    print(F'sector_KS : {sector_KS.head(10)}')
-    print(f'type(sector_KS) : {type(sector_KS)}')
-    print(f'len(sector_KS) : {len(sector_KS)}')
-    print(F'sector_KQ : {sector_KQ.head(10)}')
+    # print(F'sector_KS : {sector_KS.head(10)}')
+    # print(f'type(sector_KS) : {type(sector_KS)}')
+    # print(f'len(sector_KS) : {len(sector_KS)}')
+    # print(F'sector_KQ : {sector_KQ.head(10)}')
 
     tmpData = sector_KS.append(sector_KQ)
     return tmpData
