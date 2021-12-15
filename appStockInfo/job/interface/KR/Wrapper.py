@@ -94,16 +94,18 @@ class MainWrapper:
 
 class GetStockList:
     def __init__(self):
-        self.KOSDAQ = list(set(stock.get_market_ticker_list(
-                                    market="KOSDAQ",
-
-                                    )))
-        self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
+        self.KOSDAQ = None
+        self.KOSPI = None
         self.tickerToName = {}
 
     def doAction(self):
+        self.getMarketTickers()
         self.getTickerNameKOSDAQ()
         self.getTickerNameKOSPI()
+
+    def getMarketTickers(self):
+        self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
+        self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
 
 
     def getTickerNameKOSDAQ(self):
@@ -141,6 +143,8 @@ class GetStockInfo:
 
         self.getBasicKOSDAQ(listKOSDAQ)
         self.getTickerKOSDAQ(listKOSDAQ)
+
+        self.getFinanceData()
 
     def getFinanceData(self):
         """업종 데이터"""
@@ -214,29 +218,22 @@ class GetStockInfo:
 def FinaceInformation(market=None):
     # https://wg-cy.tistory.com/54?category=1000874
 
-    # generate.cmd에서 Request URL과 동일
-
-    # generate.cmd에서 Form Data와 동일
-
-    # 헤더 부분에 리퍼러(Referer)를 추가합니다.
-    # 리퍼러란 링크를 통해서 각각의 웹사이트로 방문할 때 남는 흔적입니다. (로봇으로 인식을 하지 않게 하기 위함.)
+    # 헤더 부분에 리퍼러(Referer)를 추가, 링크를 통해서 각각의 웹사이트로 방문할 때 남는 흔적입니다. (로봇으로 인식을 하지 않게 하기 위함.)
     headers = {'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader'}
 
-    otp = rq.post(CONF.KRX__GEN_OPT_URL, CONF.KRX__GEN_OPT_DATA_KOSPI, headers=headers).text
+    tmpKOSPI = CONF.KRX__GEN_OPT_DATA_KOSPI
+    tmpKOSPI['trdDd'] = datetime.today().strftime("%Y%m%d")
+    otp = rq.post(CONF.KRX__GEN_OPT_URL, tmpKOSPI, headers=headers).text
     # download.cmd 에서 General의 Request URL 부분
     down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
     down_sector_KS = rq.post(down_url, {'code': otp}, headers=headers)
     sector_KS = pd.read_csv(BytesIO(down_sector_KS.content), encoding='EUC-KR')
 
-
-    otp = rq.post(CONF.KRX__GEN_OPT_URL, CONF.KRX__GEN_OPT_DATA_KOSDAQ, headers=headers).text
+    tmpKOSDAQ = CONF.KRX__GEN_OPT_DATA_KOSDAQ
+    tmpKOSDAQ['trdDd'] = datetime.today().strftime("%Y%m%d")
+    otp = rq.post(CONF.KRX__GEN_OPT_URL, tmpKOSDAQ, headers=headers).text
     down_sector_KQ = rq.post(down_url, {'code': otp}, headers=headers)
     sector_KQ = pd.read_csv(BytesIO(down_sector_KQ.content), encoding='EUC-KR')
-
-    # print(F'sector_KS : {sector_KS.head(10)}')
-    # print(f'type(sector_KS) : {type(sector_KS)}')
-    # print(f'len(sector_KS) : {len(sector_KS)}')
-    # print(F'sector_KQ : {sector_KQ.head(10)}')
 
     tmpData = sector_KS.append(sector_KQ)
     return tmpData

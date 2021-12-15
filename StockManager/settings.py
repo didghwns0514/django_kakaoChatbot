@@ -264,3 +264,13 @@ LOG_VIEWER_FILES_DIR = BASE_DIR / 'logs/'
 LOG_VIEWER_PAGE_LENGTH = 25       # total log lines per-page
 LOG_VIEWER_MAX_READ_LINES = 1000  # total log lines will be read
 LOG_VIEWER_PATTERNS = ['[INFO]', '[DEBUG]', '[WARNING]', '[ERROR]', '[CRITICAL]']
+
+
+# Django test configuration
+# https://github.com/realpython/django-slow-tests
+TEST_RUNNER = 'django_slowtests.testrunner.DiscoverSlowestTestsRunner'
+NUM_SLOW_TESTS = None # generate full tests reports
+# (Optional)
+SLOW_TEST_THRESHOLD_MS = 2000  # Only show tests slower than 200ms
+# (Optional)
+ALWAYS_GENERATE_SLOW_REPORT = True  # Generate report only when requested using --slowreport flag

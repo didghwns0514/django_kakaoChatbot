@@ -11,6 +11,7 @@ import time
 class GetStockListTest(TestCase):
     def test_GetStockList(self):
         stockList = GetStockList()
+        stockList.getMarketTickers()
         totalList = stockList.KOSDAQ + stockList.KOSPI
 
         print(f'len(stockList.KOSDAQ) : {len(stockList.KOSDAQ)}')
@@ -22,6 +23,7 @@ class GetStockListTest(TestCase):
     @unittest.skip
     def test_getTickerNameKOSDAQ(self):
         stockList = GetStockList()
+        stockList.doAction()
         tickerNames = stockList.tickerToName
 
         for ticker in list(tickerNames.keys())[:10]:

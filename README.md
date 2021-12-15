@@ -11,37 +11,40 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 2) [참조2](https://django-doc-test-kor.readthedocs.io/en/old_master/intro/tutorial01.html)
 3) [참조3-장고 개발 기본](https://076923.github.io/posts/Python-Django-1/)
 4) Test - 기본
-  1) [장고 test 기본-1](https://velog.io/@hj8853/Django-Unit-Test)
-  2) [장고 test 기본-2](https://ugaemi.com/tdd/Django-unit-test/)
-  3) [장고 test 기본-3](https://velog.io/@maintain0404/Django에서-Test하기)
+   1) [장고 test 기본-1](https://velog.io/@hj8853/Django-Unit-Test)
+   2) [장고 test 기본-2](https://ugaemi.com/tdd/Django-unit-test/)
+   3) [장고 test 기본-3](https://velog.io/@maintain0404/Django에서-Test하기)
 5) Test - model
-  1) [장고 test Model-1](https://dev-yakuza.posstree.com/ko/django/test/models/)
+   1) [장고 test Model-1](https://dev-yakuza.posstree.com/ko/django/test/models/)
 6) User Model
-  1) [장고 User Model-1](https://dev-yakuza.posstree.com/ko/django/custom-user-model/)
+   1) [장고 User Model-1](https://dev-yakuza.posstree.com/ko/django/custom-user-model/)
 7) Logging in Django
-  1) [장고 logging-1](https://hikoding.tistory.com/49)
+   1) [장고 logging-1](https://hikoding.tistory.com/49)
 8) ORM
-  1) [장고 ORM-1](https://velog.io/@ikswary/Q-F-expression)
+   1) [장고 ORM-1](https://velog.io/@ikswary/Q-F-expression)
+   2) [장고 ORM F expression-2](https://simpleisbetterthancomplex.com/tips/2016/08/23/django-tip-13-f-expressions.html)
+   3) [장고 ORM 쿼리표현식](https://runebook.dev/ko/docs/django/ref/models/expressions)
 
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
 
 ## 개발 참조
 1) Apscheduler 정리
-  1) [App Scheduler](https://ediblepotato.tistory.com/3)
-  2) [Scheduler 사용 예시](https://medium.com/@kevin.michael.horan/scheduling-tasks-in-django-with-the-advanced-python-scheduler-663f17e868e6)
-  3) [Cronjob 추가하기 1](https://hello-bryan.tistory.com/216)
-  4) [Cronjob 추가하기 2](https://m.blog.naver.com/varkiry05/221257249284~~~~)
+   1) [App Scheduler](https://ediblepotato.tistory.com/3)
+   2) [Scheduler 사용 예시](https://medium.com/@kevin.michael.horan/scheduling-tasks-in-django-with-the-advanced-python-scheduler-663f17e868e6)
+   3) [Cronjob 추가하기 1](https://hello-bryan.tistory.com/216)
+   4) [Cronjob 추가하기 2](https://m.blog.naver.com/varkiry05/221257249284~~~~)
 2) [CORS setting](https://hyeonyeee.tistory.com/65)
 3) Static 관련 정리
-  1) [Static 경로 설정 후, template 사용법](https://0ver-grow.tistory.com/912) 
-  2) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
-  3) [Static serving done by whitelabel](https://listed.to/@toolate/6967/heroku-x-django-static)
+   1) [Static 경로 설정 후, template 사용법](https://0ver-grow.tistory.com/912) 
+   2) [Static collect](https://nachwon.github.io/django-deploy-4-static/)
+   3) [Static serving done by whitelabel](https://listed.to/@toolate/6967/heroku-x-django-static)
 4) 주식 모듈 관련 정리
-  1) Yahoo
-    1) [yahoo finance 정리 1](https://scribblinganything.tistory.com/377)
-  2) Finance Data Reader
-    2) [Finance Data Reader 정리 1](https://mokeya.tistory.com/72)
+   1) Yahoo
+      1) [yahoo finance 정리 1](https://scribblinganything.tistory.com/377)
+   2) Finance Data Reader
+      2) [Finance Data Reader 정리 1](https://mokeya.tistory.com/72)
+
 **Framework & library used :**
 - Django
 - Frontend : no webpage yet (communicates with Kakao API-chatbot with JSON format)

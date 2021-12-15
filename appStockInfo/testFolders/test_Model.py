@@ -118,8 +118,8 @@ class CreateKRStocks(TestCase):
         self.assertEqual(str(readDummy2.stock_name), dummy2_tick)
         self.assertEqual(str(readDummy2.stock_tick), dummy2_tick)
 
-    @unittest.skip
-    def test_createStockItemYahooInfo(self):
+
+    def test_getFinanceData(self):
         import pickle, os
         import copy
         from pathlib import Path
@@ -146,12 +146,6 @@ class CreateKRStocks(TestCase):
 
 
         # Test info types
-        count = 0
-        for ticker in mainWrapper.stockInfo.infoYahooKOSPI:
-            count += 1
-            tmpData = mainWrapper.stockInfo.infoYahooKOSPI[ticker]
-            print(f'ticker : {ticker}')
-            print(f'tmpData.info["sector"] : {tmpData.info["sector"]}')
-            print(f'tmpData.info["industry"] : {tmpData.info["industry"]}')
-            if count >= 10:
-                break
+        infoFinance = mainWrapper.stockInfo.infoFinanceData
+        print(f'len(infoFinance) : {len(infoFinance)}')
+        print(f'infoFinance.head(10) : {infoFinance.head(10)}')
