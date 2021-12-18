@@ -14,7 +14,6 @@ import pandas as pd
 import requests as rq
 from io import BytesIO
 
-
 class MainWrapper:
 
     def __init__(self):
@@ -25,6 +24,16 @@ class MainWrapper:
     def doAction(self):
         self.stockList.doAction()
         self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
+
+        # CRUD
+        # 1) Create StockTick
+        self.createStockTick(self.stockList.KOSPI, "KOSPI")
+        self.createStockTick(self.stockList.KOSDAQ, "KOSDAQ")
+
+        # 2) Create StockItemListName
+        self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
+        self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
+
 
     def createStockTick(self, listStocks:list, marketName:str='Dummy' ):
         """
@@ -40,20 +49,29 @@ class MainWrapper:
         """
 
         StockTick.objects.all().update(stock_isInfoAvailable=False)
+        exsist_stocktick = StockTick.objects.all().values_list('stock_tick', flat=True)
 
-        for tick in listStocks:
-            stockTickFilter = StockTick.objects.filter(stock_tick=tick)
-            if not stockTickFilter: # Not existing in DB
-                StockTick.objects.create(
-                    stock_tick=str(tick),
+        update_exist_stocktick = set(exsist_stocktick) & set(listStocks)
+        create_new_stocktick = set(listStocks) - set(exsist_stocktick)
+
+        # update existing stock
+        filter_1 = StockTick.objects.filter(stock_tick__in=update_exist_stocktick)
+        filter_1.update(stock_isInfoAvailable=True)
+
+        # create new stock
+        filter_2 = []
+        for stock_tick in create_new_stocktick:
+            filter_2.append(
+                StockTick(
+                    stock_tick=stock_tick,
                     stock_marketName=marketName,
                     stock_isInfoAvailable=True
-                )
-            else: # Already in DB
-                stockTickFilter.update(stock_isInfoAvailable=True)
+                          )
+            )
+        StockTick.objects.bulk_create(filter_2)
 
 
-    def createStockItemListName(self, listStocks:list, marketName:str='Dummy'):
+    def createStockItemListName2(self, listStocks:list, marketName:str='Dummy'):
         """
         create ticker to name CRUD
         > if Ticker exists, and Name isNot provided, it will be replaced with a ticker
@@ -89,8 +107,37 @@ class MainWrapper:
             else: # Already in DB
                 pass
 
-    def createStockItem(self):
-        pass
+    def createStockItemListName(self, listStocks:list, marketName:str='Dummy'):
+        """
+        create ticker to name CRUD
+        > if Ticker exists, and Name isNot provided, it will be replaced with a ticker
+
+        [ORM]
+        stock_tick : ForeignKey - Stock 코드
+        stock_name : 실제 종목 이름 Mapping 값
+        """
+
+        stockTickFilter = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
+        # print(f'listStocks : {listStocks},  marketName : {marketName}')
+        print(f'stockTickFilter : {stockTickFilter}')
+
+    def createStockItem(self, listStocks:list):
+        """
+        create Stock information CRUD
+        > 1) If StockName exists : Needs Update if StockTick is True
+        > 2) If StockName doesn't exists: Skip
+        [ORM]
+        stock_tick : ForeignKey - Stock 코드
+        stock_name : 실제 종목 이름 Mapping 값
+        """
+        for tick in listStocks:
+            try: # check if tick exists
+                tmpStockTick = StockTick.objects.get(stock_tick=tick)
+
+            except: pass
+
+
+
 
 class GetStockList:
     def __init__(self):

@@ -119,6 +119,10 @@ class CreateKRStocks(TestCase):
         self.assertEqual(str(readDummy2.stock_tick), dummy2_tick)
 
 
+    def test_createStockItem(self):
+        pass
+
+
     def test_getFinanceData(self):
         import pickle, os
         import copy

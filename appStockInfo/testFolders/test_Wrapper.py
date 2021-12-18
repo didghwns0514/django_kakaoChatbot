@@ -9,6 +9,8 @@ import time
 
 # Create your tests here.
 class GetStockListTest(TestCase):
+
+    @unittest.skip
     def test_GetStockList(self):
         stockList = GetStockList()
         stockList.getMarketTickers()

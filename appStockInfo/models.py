@@ -20,8 +20,8 @@ class StockItemListName(models.Model):
         return self.stock_name
 
 class StockItem(models.Model):
-    stock_name = models.ForeignKey(StockItemListName, on_delete=models.CASCADE,
-                                   default="Dummy")
+    stock_name = models.ForeignKey(StockItemListName,
+                                   on_delete=models.CASCADE, default="Dummy")
     reg_date = models.DateField(default=timezone.now, null=True)
     high = models.FloatField(default=0.0)
     low = models.FloatField(default=0.0)
@@ -29,7 +29,12 @@ class StockItem(models.Model):
     close = models.FloatField(default=0.0)
     volume = models.FloatField(default=0.0)
 
+    total_sum = models.IntegerField(default=0)
+
     per = models.FloatField(default=0.0)
     pbr = models.FloatField(default=0.0)
     roe = models.FloatField(default=0.0)
     roa = models.FloatField(default=0.0)
+
+class StockLastUpdateTime(models.Model):
+    update_time = models.DateTimeField(default=timezone.now, null=False)
