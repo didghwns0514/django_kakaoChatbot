@@ -153,3 +153,36 @@ class CreateKRStocks(TestCase):
         infoFinance = mainWrapper.stockInfo.infoFinanceData
         print(f'len(infoFinance) : {len(infoFinance)}')
         print(f'infoFinance.head(10) : {infoFinance.head(10)}')
+
+    def test_getStockdata(self):
+        import pickle, os
+        import copy
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parent.parent
+        #  /Users/yanghojun/Library/Mobile Documents/com~apple~CloudDocs/Code_mac/vscode/app_StockManager/django_kakaoChatbot/appStockInfo
+        mainWrapper = MainWrapper()
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockList.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockList = copy.deepcopy(pickle.load(f))
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockInfo.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
+
+
+        ## check infos
+        print(f'KOSPI basic info')
+        print(f'mainWrapper.stockInfo.infoBasicKOSPI : {mainWrapper.stockInfo.infoBasicKOSPI}')
+
+        print(f'KOSPI Ticker info')
+        print(f'mainWrapper.stockInfo.infoTickerKOSPI : {mainWrapper.stockInfo.infoTickerKOSPI}')

@@ -71,42 +71,6 @@ class MainWrapper:
         StockTick.objects.bulk_create(filter_2)
 
 
-    def createStockItemListName2(self, listStocks:list, marketName:str='Dummy'):
-        """
-        create ticker to name CRUD
-        > if Ticker exists, and Name isNot provided, it will be replaced with a ticker
-
-        [ORM]
-        stock_tick : ForeignKey - Stock 코드
-        stock_name : 실제 종목 이름 Mapping 값
-        """
-        for tick in listStocks:
-            stockTickFilter = StockItemListName.objects.filter(stock_tick=tick)
-            if tick not in self.stockList.tickerToName:
-                tmpNameData = str(tick)
-            else:
-                tmpNameData = self.stockList.tickerToName[tick]
-            if not stockTickFilter: # Not existing in DB
-                tmpStockTick = StockTick.objects.filter(
-                        stock_tick=tick,
-                        # stock_marketName=marketName,
-                        # stock_isInfoAvailable=False
-                    )
-                if not tmpStockTick:
-                    tmpStockTick = StockTick.objects.create(
-                        stock_tick=tick,
-                        stock_marketName=marketName,
-                        stock_isInfoAvailable=False
-                    )
-                else:
-                    tmpStockTick = StockTick.objects.get(stock_tick=tick)
-                StockItemListName.objects.create(
-                    stock_tick=tmpStockTick,
-                    stock_name=tmpNameData
-                )
-            else: # Already in DB
-                pass
-
     def createStockItemListName(self, listStocks:list, marketName:str='Dummy'):
         """
         create ticker to name CRUD
@@ -117,9 +81,44 @@ class MainWrapper:
         stock_name : 실제 종목 이름 Mapping 값
         """
 
-        stockTickFilter = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
-        # print(f'listStocks : {listStocks},  marketName : {marketName}')
-        print(f'stockTickFilter : {stockTickFilter}')
+        exsist_stocktick = StockItemListName.objects.all().values_list('stock_tick', flat=True)
+        create_new_stocktick = set(listStocks) - set(exsist_stocktick)
+
+        # create new stock list item
+        filter_1 = []
+        filter_2 = []
+        for stock_tick in create_new_stocktick:
+            # ticker - 회사 이름 업데이트
+            if stock_tick not in self.stockList.tickerToName:
+                tmpNameData = str(stock_tick)
+            else:
+                tmpNameData = self.stockList.tickerToName[stock_tick]
+
+            try:
+                tmpStockTick = StockTick.objects.filter(stock_tick=stock_tick)
+                if tmpStockTick.exists(): # 존재한다면
+                    filter_2.append(
+                        StockItemListName(
+                            stock_tick=tmpStockTick.first(),
+                            stock_name=tmpNameData
+                        )
+                    )
+                else: # 존재하지 않는다면, create 이후 업데이트
+                    tmpCreateStockTick = StockTick(
+                        stock_tick=stock_tick,
+                        stock_marketName=marketName,
+                        stock_isInfoAvailable=False
+                    )
+                    filter_1.append(tmpCreateStockTick)
+                    filter_2.append(
+                        StockItemListName(
+                            stock_tick=tmpCreateStockTick,
+                            stock_name=tmpNameData
+                        )
+                    )
+            except:pass
+        StockTick.objects.bulk_create(filter_1)
+        StockItemListName.objects.bulk_create(filter_2)
 
     def createStockItem(self, listStocks:list):
         """
@@ -130,6 +129,8 @@ class MainWrapper:
         stock_tick : ForeignKey - Stock 코드
         stock_name : 실제 종목 이름 Mapping 값
         """
+        #exsist_stocktick = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
+
         for tick in listStocks:
             try: # check if tick exists
                 tmpStockTick = StockTick.objects.get(stock_tick=tick)
@@ -137,6 +138,11 @@ class MainWrapper:
             except: pass
 
 
+    def updateStockLastUpdateTime(self):
+        """
+        update dateime of last update of KR stocks
+        """
+        pass
 
 
 class GetStockList:
