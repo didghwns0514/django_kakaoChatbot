@@ -19,22 +19,44 @@ class StockItemListName(models.Model):
     def __str__(self):
         return self.stock_name
 
+class StockSection(models.Model):
+    section_integer = models.AutoField(primary_key=True)
+    section_name = models.CharField(max_length=200, blank=False, default="DummyName")
+
+    def __str__(self):
+        return self.section_name
+
 class StockItem(models.Model):
     stock_name = models.ForeignKey(StockItemListName,
                                    on_delete=models.CASCADE, default="Dummy")
+    section_name = models.ForeignKey(StockSection,
+                                     on_delete=models.CASCADE, default="Others")
     reg_date = models.DateField(default=timezone.now, null=True)
+
+    open = models.FloatField(default=0.0)
     high = models.FloatField(default=0.0)
     low = models.FloatField(default=0.0)
-    open = models.FloatField(default=0.0)
     close = models.FloatField(default=0.0)
     volume = models.FloatField(default=0.0)
 
-    total_sum = models.IntegerField(default=0)
+    total_sum = models.BigIntegerField(default=0)
 
-    per = models.FloatField(default=0.0)
-    pbr = models.FloatField(default=0.0)
+    """
+    BPS : (주당순자산가치=청산가치): (순자산)/(총발행주식수)
+    PER : (주가수익비율): (주가)/(주당순이익)
+    EPS : (주당순이익): (당기순이익)/(총발행주식수)
+    DIV : (배당수익률): (주가배당금/주가) * 100
+    DPS : 주식배당금
+    
+    > roe : (당기순이익)/(자본총액) = EPS/BPS
+    > roa : 
+    """
+    div = models.FloatField(default=0.0)
+
+    per = models.FloatField(default=0.0) #
+    pbr = models.FloatField(default=0.0) #
     roe = models.FloatField(default=0.0)
-    roa = models.FloatField(default=0.0)
+    #roa = models.FloatField(default=0.0)
 
 class StockLastUpdateTime(models.Model):
     update_time = models.DateTimeField(default=timezone.now, null=False)

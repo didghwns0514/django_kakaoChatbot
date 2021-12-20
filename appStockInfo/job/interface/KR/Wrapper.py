@@ -2,7 +2,9 @@ from django.db.models import Q, F
 from appStockInfo.models import (
     StockTick,
     StockItemListName,
-    StockItem
+    StockItem,
+    StockSection,
+    StockLastUpdateTime
 )
 import ConfigFile as CONF
 
@@ -13,8 +15,9 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests as rq
 from io import BytesIO
+import traceback
 
-class MainWrapper:
+class MainWrapperKR:
 
     def __init__(self):
 
@@ -33,6 +36,18 @@ class MainWrapper:
         # 2) Create StockItemListName
         self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
         self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
+
+        # 3) Create StockSection
+        self.createStockSection()
+
+        # 4-1) Delete StockItems
+        self.deleteStockItem()
+        # 4-2) Create StockItems
+        self.createStockItem(self.stockList.KOSPI, "KOSPI")
+        self.createStockItem(self.stockList.KOSDAQ, "KOSDAQ")
+
+        # 5) Create DateStamp
+        self.updateStockLastUpdateTime()
 
 
     def createStockTick(self, listStocks:list, marketName:str='Dummy' ):
@@ -68,6 +83,7 @@ class MainWrapper:
                     stock_isInfoAvailable=True
                           )
             )
+
         StockTick.objects.bulk_create(filter_2)
 
 
@@ -117,10 +133,48 @@ class MainWrapper:
                         )
                     )
             except:pass
+
         StockTick.objects.bulk_create(filter_1)
         StockItemListName.objects.bulk_create(filter_2)
 
-    def createStockItem(self, listStocks:list):
+
+    def createStockSection(self):
+        """
+        Stock Sections mapping
+        > Non existing will be added
+
+        [ORM]
+        if Relational Field doesn't exist in the table, return others
+        -> create "Others"
+        """
+        tmpOthers = StockSection.objects.filter(section_name="Others")
+        if not tmpOthers.exists():
+            StockSection.objects.create(
+                section_name="Others"
+            )
+
+        tmpStockSectionDF = self.stockInfo.infoFinanceData
+        tmpStockSectionCol = tmpStockSectionDF['업종명'].tolist()
+        tmpStockSectionDB = StockSection.objects.all().values_list('section_name', flat=True)
+        create_new_stocksection = set(tmpStockSectionCol) - set(tmpStockSectionDB)
+
+        filter_1 = []
+
+        for section in create_new_stocksection:
+            filter_1.append(
+                StockSection(
+                    section_name=section
+                )
+            )
+        StockSection.objects.bulk_create(filter_1)
+
+
+    def deleteStockItem(self):
+
+        # 모든것을 지움
+        StockItem.objects.all().delete()
+
+    def createStockItem(self, listStocks:list, market):
         """
         create Stock information CRUD
         > 1) If StockName exists : Needs Update if StockTick is True
@@ -131,18 +185,112 @@ class MainWrapper:
         """
         #exsist_stocktick = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
 
-        for tick in listStocks:
-            try: # check if tick exists
-                tmpStockTick = StockTick.objects.get(stock_tick=tick)
+        assert(market in ["KOSPI", "KOSDAQ"])
 
-            except: pass
+
+
+        # 정보 lookup 세팅
+        filter_1 = []
+        infoFinanceDF = self.stockInfo.infoFinanceData
+        if infoFinanceDF.isnull().values.any():
+            print(f'infoFinanceDF : \n{infoFinanceDF.head(10)}')
+
+        # total iteration
+        for tick in listStocks:
+            try:
+
+                # pull from Info
+                if market == "KOSPI":
+                    tmpInfoBasic = self.stockInfo.infoBasicKOSPI[tick]
+                    tmpTickerBasic = self.stockInfo.infoTickerKOSPI[tick]
+                elif market == "KOSDAQ":
+                    tmpInfoBasic = self.stockInfo.infoBasicKOSDAQ[tick]
+                    tmpTickerBasic = self.stockInfo.infoTickerKOSDAQ[tick]
+
+                # Dataframe prep
+                concatDF = pd.concat(
+                    [
+                        tmpInfoBasic,
+                        tmpTickerBasic
+                    ], axis=1
+                )
+                concatDF['ROE'] = concatDF['EPS']/concatDF['BPS'] * 100
+                concatDF['시가총액'] = int(
+                    infoFinanceDF.loc[infoFinanceDF['종목코드'] == tick, "시가총액"].values[0]
+                )
+
+                # -> Nan value removal
+                # https://rfriend.tistory.com/542
+                # https://rfriend.tistory.com/262
+                fill_missing_nan = {
+                    'ROE' : 0,
+                    '거래량': 0,
+                    'BPS' : concatDF['BPS'].bfill(),
+                    'PER' : concatDF['PER'].bfill(),
+                    'PBR' : concatDF['PBR'].bfill(),
+                    'EPS' : concatDF['EPS'].bfill(),
+                    'DIV' : concatDF['DIV'].bfill()
+                }
+                concatDF.fillna(fill_missing_nan, inplace=True) # removal inplace
+
+
+                # get StockSection object
+                try: # 없으면 Other 할당
+                    #section = str(selectedDF["업종명"])
+                    section = str(
+                        infoFinanceDF.loc[infoFinanceDF['종목코드'] == tick, '업종명'].values[0]
+                    )
+                except: section = str("Other")
+
+
+                # Foreign Key
+                tmpStockName = StockItemListName.objects.get(
+                    stock_tick=tick
+                )
+                tmpSectionName = StockSection.objects.get(
+                    section_name=section
+                )
+
+                # iteration
+                for idx, row in concatDF.iterrows():
+                    reg_date = idx
+                    open = row["시가"]
+                    high = row["고가"]
+                    low = row["저가"]
+                    close = row["종가"]
+                    volume = row["거래량"]
+                    total_sum = row["시가총액"]
+                    div = row["DIV"]
+                    per = row["PER"]
+                    pbr = row["PBR"]
+                    roe = row["ROE"]
+                    filter_1.append(
+                        StockItem(
+                            stock_name=tmpStockName,
+                            section_name=tmpSectionName,
+                            reg_date=reg_date,
+                            open=open,
+                            high=high,
+                            low=low,
+                            close=close,
+                            volume=volume,
+                            total_sum=total_sum,
+                            div=div,
+                            per=per,
+                            pbr=pbr,
+                            roe=roe
+                        )
+                    )
+            except Exception as e: pass
+
+        StockItem.objects.bulk_create(filter_1)
 
 
     def updateStockLastUpdateTime(self):
         """
         update dateime of last update of KR stocks
         """
-        pass
+        StockLastUpdateTime.objects.create()
 
 
 class GetStockList:

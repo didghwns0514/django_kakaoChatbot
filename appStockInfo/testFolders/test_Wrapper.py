@@ -2,7 +2,7 @@ import unittest
 
 from django.test import TestCase
 from appStockInfo.job.interface.KR.Wrapper import (
-    GetStockInfo, GetStockList, MainWrapper
+    GetStockInfo, GetStockList, MainWrapperKR
 )
 from datetime import datetime, timedelta
 import time

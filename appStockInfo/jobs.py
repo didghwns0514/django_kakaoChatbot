@@ -1,11 +1,15 @@
-from datetime import datetime
+from appStockInfo.job.interface.KR.Wrapper import (
+	MainWrapperKR
+)
 import logging
 logger = logging.getLogger('my')
 
 def serviceKRStocks():
 	"""Update KR stock info"""
 	logger.info("serviceKRStocks - called from apscheduler")
-	pass
+
+	mainKRWrapper = MainWrapperKR()
+	mainKRWrapper.doAction()
 
 
 def serviceUSStocks():
