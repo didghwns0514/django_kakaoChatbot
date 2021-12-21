@@ -174,6 +174,7 @@ class MainWrapperKR:
         # 모든것을 지움
         StockItem.objects.all().delete()
 
+
     def createStockItem(self, listStocks:list, market):
         """
         create Stock information CRUD
@@ -186,7 +187,6 @@ class MainWrapperKR:
         #exsist_stocktick = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
 
         assert(market in ["KOSPI", "KOSDAQ"])
-
 
 
         # 정보 lookup 세팅
