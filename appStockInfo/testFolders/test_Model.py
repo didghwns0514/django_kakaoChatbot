@@ -352,9 +352,9 @@ class CreateKRStocks(TestCase):
         mainWrapper = MainWrapperKR()
 
         # Required
-        mainWrapper.updateStockLastUpdateTime()
+        tmpTodayDateStamp = datetime.datetime.now()
+        mainWrapper.updateStockLastUpdateTime(tmpTodayDateStamp)
 
-        tmpTodayDateStamp = datetime.datetime.today()
         self.assertEqual(
             StockLastUpdateTime.objects.filter(
                 update_time=tmpTodayDateStamp

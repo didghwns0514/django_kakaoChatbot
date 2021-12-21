@@ -24,6 +24,9 @@ Will provide you `**Real-Time Top Stocks**` at any time.
    1) [장고 ORM-1](https://velog.io/@ikswary/Q-F-expression)
    2) [장고 ORM F expression-2](https://simpleisbetterthancomplex.com/tips/2016/08/23/django-tip-13-f-expressions.html)
    3) [장고 ORM 쿼리표현식](https://runebook.dev/ko/docs/django/ref/models/expressions)
+9) TimeZone
+   1) [TimeZone-1](https://devlog.jwgo.kr/2020/10/28/using-timezone-in-django/)
+   2) [TimeZone-2](https://8percent.github.io/2017-05-31/django-timezone-problem/) 
 
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
