@@ -1,4 +1,5 @@
 from django.db.models import Q, F
+from django.utils import timezone
 from appStockInfo.models import (
     StockTick,
     StockItemListName,
@@ -16,6 +17,8 @@ import pandas as pd
 import requests as rq
 from io import BytesIO
 import traceback
+import logging
+logger = logging.getLogger('my')
 
 class MainWrapperKR:
 
@@ -25,6 +28,7 @@ class MainWrapperKR:
         self.stockInfo = GetStockInfo()
 
     def doAction(self):
+        logger.info("MainWrapperKR - doAction")
         self.stockList.doAction()
         self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
@@ -47,7 +51,7 @@ class MainWrapperKR:
         self.createStockItem(self.stockList.KOSDAQ, "KOSDAQ")
 
         # 5) Create DateStamp
-        self.updateStockLastUpdateTime()
+        self.updateStockLastUpdateTime(dateStamp=datetime.now())
 
 
     def createStockTick(self, listStocks:list, marketName:str='Dummy' ):
@@ -174,6 +178,7 @@ class MainWrapperKR:
         # 모든것을 지움
         StockItem.objects.all().delete()
 
+
     def createStockItem(self, listStocks:list, market):
         """
         create Stock information CRUD
@@ -186,7 +191,6 @@ class MainWrapperKR:
         #exsist_stocktick = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
 
         assert(market in ["KOSPI", "KOSDAQ"])
-
 
 
         # 정보 lookup 세팅
@@ -286,11 +290,13 @@ class MainWrapperKR:
         StockItem.objects.bulk_create(filter_1)
 
 
-    def updateStockLastUpdateTime(self):
+    def updateStockLastUpdateTime(self, dateStamp):
         """
         update dateime of last update of KR stocks
         """
-        StockLastUpdateTime.objects.create()
+        StockLastUpdateTime.objects.create(
+            update_time=dateStamp
+        )
 
 
 class GetStockList:
@@ -300,6 +306,7 @@ class GetStockList:
         self.tickerToName = {}
 
     def doAction(self):
+        logger.info("GetStockList - doAction")
         self.getMarketTickers()
         self.getTickerNameKOSDAQ()
         self.getTickerNameKOSPI()
@@ -308,6 +315,8 @@ class GetStockList:
         self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
         self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
 
+        if not(self.KOSDAQ) or not(self.KOSPI):
+            logger.critical("GetStockList - getMarketTickers; No data retrieved")
 
     def getTickerNameKOSDAQ(self):
         for stockTicker in self.KOSDAQ:
@@ -315,6 +324,7 @@ class GetStockList:
                 self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
             except:
                 self.tickerToName[stockTicker] = stockTicker
+                logger.critical(f"GetStockList - getTickerNameKOSDAQ; No name retrieved, ticker : {stockTicker}")
 
     def getTickerNameKOSPI(self):
         for stockTicker in self.KOSPI:
@@ -322,6 +332,8 @@ class GetStockList:
                 self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
             except:
                 self.tickerToName[stockTicker] = stockTicker
+                logger.critical(f"GetStockList - getTickerNameKOSPI; No name retrieved, ticker : {stockTicker}")
+
 
     def __str__(self) -> str:
         return f'KOSDAQ : \n {self.KOSDAQ[:10]}  \nKOSPI : \n {self.KOSPI[:10]}'
@@ -339,6 +351,7 @@ class GetStockInfo:
         self.infoFinanceData = None
 
     def doAction(self, listKOSPI:list, listKOSDAQ:list):
+        logger.info("GetStockInfo - doAction")
         self.getBasicKOSPI(listKOSPI)
         self.getTickerKOSPI(listKOSPI)
 
@@ -351,6 +364,8 @@ class GetStockInfo:
         """업종 데이터"""
         tmpData =  FinaceInformation("KRX")
         self.infoFinanceData = tmpData
+        if tmpData.empty:
+            logger.critical("GetStockInfo - getFinanceData; Empty Dataframe")
 
     def getBasicKOSDAQ(self, listKOSDAQ:list):
 
@@ -365,6 +380,9 @@ class GetStockInfo:
                 )
 
                 self.infoBasicKOSDAQ[stockID] = tmpData
+                if tmpData.empty:
+                    logger.critical("GetStockInfo - getBasicKOSDAQ; Empty Dataframe")
+
             except:pass
 
 
@@ -376,8 +394,10 @@ class GetStockInfo:
                                                        self.setTimeFormat(datetime.today(), haveSeparator=False),
                                                        stockID, freq="d")
                 self.infoTickerKOSDAQ[stockID] = tmpData
-            except:pass
+                if tmpData.empty:
+                    logger.critical("GetStockInfo - getTickerKOSDAQ; Empty Dataframe")
 
+            except:pass
 
 
     def getBasicKOSPI(self, listKOSPI:list):
@@ -392,6 +412,9 @@ class GetStockInfo:
                 )
 
                 self.infoBasicKOSPI[stockID] = tmpData
+                if tmpData.empty:
+                    logger.critical("GetStockInfo - getBasicKOSPI; Empty Dataframe")
+
             except:pass
 
     def getTickerKOSPI(self, listKOSPI:list):
@@ -403,6 +426,9 @@ class GetStockInfo:
                                                        stockID, freq="d",
                                                        )
                 self.infoTickerKOSPI[stockID] = tmpData
+                if tmpData.empty:
+                    logger.critical("GetStockInfo - getTickerKOSPI; Empty Dataframe")
+
             except:pass
 
 
@@ -438,6 +464,7 @@ def FinaceInformation(market=None):
 
     tmpData = sector_KS.append(sector_KQ)
     return tmpData
+
 
 
 if __name__ == '__main__':
