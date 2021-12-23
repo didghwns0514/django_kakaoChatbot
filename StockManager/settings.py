@@ -27,7 +27,12 @@ SECRET_KEY = CONFI.DJANGO_SECRET
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['hjyang.iptime.org', 'localhost']
+ALLOWED_HOSTS = ['hjyang.iptime.org',
+                 'localhost',
+                 # Data
+                 'http://data.krx.co.kr/',
+                 '*'
+                 ]
 
 
 # Application definition
@@ -136,6 +141,8 @@ CORS_ORIGIN_WHITELIST = [
                          'http://localhost:5552',
                          'http://hjyang.iptime.org',
                          'http://hjyang.iptime.org:4441',
+                         # Data
+                         'http://data.krx.co.kr',
                          ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [

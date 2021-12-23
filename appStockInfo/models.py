@@ -19,6 +19,7 @@ class StockItemListName(models.Model):
     def __str__(self):
         return self.stock_name
 
+
 class StockSection(models.Model):
     section_integer = models.AutoField(primary_key=True)
     section_name = models.CharField(max_length=200, blank=False, default="DummyName")
@@ -26,11 +27,20 @@ class StockSection(models.Model):
     def __str__(self):
         return self.section_name
 
+class StockItemListSection(models.Model):
+    stock_tick = models.ForeignKey(StockTick, on_delete=models.CASCADE, default="Dummy")
+    section_name = models.ForeignKey(StockSection, on_delete=models.CASCADE, default="Dummy")
+    total_sum = models.BigIntegerField(default=0)
+
+
 class StockItem(models.Model):
     stock_name = models.ForeignKey(StockItemListName,
                                    on_delete=models.CASCADE, default="Dummy")
-    section_name = models.ForeignKey(StockSection,
-                                     on_delete=models.CASCADE, default="Others")
+    stock_map_section = models.OneToOneField(StockItemListSection,
+                                    on_delete=models.CASCADE,
+                                    default="Dummy",
+                                          )
+
     reg_date = models.DateField(default=timezone.now, null=True)
 
     open = models.FloatField(default=0.0)
@@ -39,7 +49,6 @@ class StockItem(models.Model):
     close = models.FloatField(default=0.0)
     volume = models.FloatField(default=0.0)
 
-    total_sum = models.BigIntegerField(default=0)
 
     """
     BPS : (주당순자산가치=청산가치): (순자산)/(총발행주식수)
@@ -57,6 +66,7 @@ class StockItem(models.Model):
     pbr = models.FloatField(default=0.0) #
     roe = models.FloatField(default=0.0)
     #roa = models.FloatField(default=0.0)
+
 
 class StockLastUpdateTime(models.Model):
     update_time = models.DateTimeField(default=timezone.now, null=False)

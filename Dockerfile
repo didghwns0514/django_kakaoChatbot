@@ -22,4 +22,4 @@ EXPOSE 5552
 #CMD ["./manage.py","runserver","5552"]
 #CMD ["gunicorn","StockManager.wsgi","--bind=0:8080"]
 #ENTRYPOINT ["./docker-startup.sh"]
-CMD ./docker-startup.sh ; gunicorn StockManager.wsgi --bind=0:5552
+CMD ./docker-startup.sh ; gunicorn StockManager.wsgi --bind=0:5552 --threads=4

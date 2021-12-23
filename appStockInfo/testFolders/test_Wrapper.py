@@ -10,7 +10,7 @@ import time
 # Create your tests here.
 class GetStockListTest(TestCase):
 
-    @unittest.skip
+    #@unittest.skip
     def test_GetStockList(self):
         stockList = GetStockList()
         stockList.getMarketTickers()
@@ -148,7 +148,7 @@ class GetStockInfoTest(TestCase):
         getStockInfo = GetStockInfo()
         getStockInfo.getFinanceData()
 
-        #print(f'finance data obtained : \n{getStockInfo.infoFinanceData}')
+        print(f'finance data obtained : \n{getStockInfo.infoFinanceData.head(10)}')
         self.assertEquals(
             getStockInfo.infoFinanceData.empty, False
         )
