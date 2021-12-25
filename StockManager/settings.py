@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_apscheduler',
-    'corsheaders',
+    #'corsheaders',
     'rest_framework', # DRF를 앱으로 등록
     'rest_framework_swagger',
     'rest_framework.authtoken',
@@ -162,6 +162,7 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'referer'
 ]
 
 # App scheduler settings

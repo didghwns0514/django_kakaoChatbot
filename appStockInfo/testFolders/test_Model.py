@@ -12,7 +12,8 @@ from appStockInfo.models import (
     StockItemListName,
     StockItem,
     StockSection,
-    StockLastUpdateTime
+    StockLastUpdateTime,
+    StockItemListSection
 )
 from appStockInfo.scheduler import taskStockUS, taskStockKR
 
@@ -156,7 +157,6 @@ class CreateKRStocks(TestCase):
         print(f'infoFinance.head(10) : {infoFinance.head(10)}')
 
 
-
     def test_createStockSection(self):
         import pickle, os
         import copy
@@ -192,6 +192,7 @@ class CreateKRStocks(TestCase):
         )
         self.assertEqual(querySet.exists(), True)
         self.assertEqual(querySet.exists(), True)
+
 
     @unittest.skip("checked working - pass")
     def test_getStockdata(self):
@@ -259,6 +260,7 @@ class CreateKRStocks(TestCase):
             print(f'idx : {idx}')
             print(f'row : {row}')
 
+
     def test_createStockItem(self):
 
         import pickle, os
@@ -288,6 +290,8 @@ class CreateKRStocks(TestCase):
 
         # Test
         # Required
+        # mainWrapper.clearConnections()
+
         mainWrapper.createStockTick(
             mainWrapper.stockList.KOSPI, "KOSPI"
         )
@@ -301,6 +305,7 @@ class CreateKRStocks(TestCase):
             mainWrapper.stockList.KOSDAQ, "KOSDAQ"
         )
         mainWrapper.createStockSection()
+        mainWrapper.createStockItemListSection()
 
         # run tests
         mainWrapper.createStockItem(
@@ -332,6 +337,11 @@ class CreateKRStocks(TestCase):
                 section_name=sectionSamsung
             ).exists(), True
         )
+        self.assertEqual(
+            StockItemListSection.objects.filter(
+                stock_tick__stock_tick=tickSamsung
+            ).exists(), True
+        )
 
         # Check for finance info
         tmpFinanceInfo = mainWrapper.stockInfo.infoFinanceData
@@ -340,6 +350,21 @@ class CreateKRStocks(TestCase):
         self.assertEqual(
             tmpSelectedDF_code.empty, False
         )
+        # Check StockItems existance
+        tmpQuery_StockTick = StockTick.objects.all()
+        print(f'len(tmpQuery_StockTick) : {len(tmpQuery_StockTick)}')
+
+        tmpQuery_StockItemListName = StockItemListName.objects.all()
+        print(f'len(tmpQuery_StockItemListName) : {len(tmpQuery_StockItemListName)}')
+
+        tmpQuery_StockSection = StockSection.objects.all()
+        print(f'len(tmpQuery_StockSection) : {len(tmpQuery_StockSection)}')
+
+        tmpQuery_StockItemListSection = StockItemListSection.objects.all()
+        print(f'len(tmpQuery_StockItemListSection) : {len(tmpQuery_StockItemListSection)}')
+
+        tmpQuery_StockItem = StockItem.objects.all()
+        print(f'len(tmpQuery_StockItem) : {len(tmpQuery_StockItem)}')
 
         # Stock Item exist check
         self.assertEquals(
@@ -347,6 +372,7 @@ class CreateKRStocks(TestCase):
                 stock_name__stock_tick__stock_tick=tickSamsung
             ).exists(), True
         )
+
 
     def test_updateStockLastUpdateTime(self):
         mainWrapper = MainWrapperKR()

@@ -27,6 +27,7 @@ class StockSection(models.Model):
     def __str__(self):
         return self.section_name
 
+
 class StockItemListSection(models.Model):
     stock_tick = models.ForeignKey(StockTick, on_delete=models.CASCADE, default="Dummy")
     section_name = models.ForeignKey(StockSection, on_delete=models.CASCADE, default="Dummy")
@@ -36,9 +37,9 @@ class StockItemListSection(models.Model):
 class StockItem(models.Model):
     stock_name = models.ForeignKey(StockItemListName,
                                    on_delete=models.CASCADE, default="Dummy")
-    stock_map_section = models.OneToOneField(StockItemListSection,
-                                    on_delete=models.CASCADE,
-                                    default="Dummy",
+    stock_map_section = models.ForeignKey(StockItemListSection,
+                                            on_delete=models.CASCADE,
+                                            default="Dummy",
                                           )
 
     reg_date = models.DateField(default=timezone.now, null=True)
