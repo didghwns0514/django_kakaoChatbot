@@ -3,7 +3,7 @@ import unittest
 
 from django.test import TestCase
 from django.db.models import Q, F
-from appStockInfo.job.interface.KR.Wrapper import (
+from appStockInfo.job.interface.KR.Service import (
     GetStockInfo, GetStockList, MainWrapperKR
 )
 
