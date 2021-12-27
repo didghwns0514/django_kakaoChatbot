@@ -1,4 +1,4 @@
-from appStockInfo.job.interface.KR.Service import (
+from appStockInfo.job.interface.KR.Wrapper import (
 	MainWrapperKR
 )
 import logging

@@ -2,6 +2,7 @@ from datetime import datetime
 
 TOTAL_REQUEST_DATE_LENGTH = 10
 TOTAL_RETRY_FOR_FETCH_FAIL = 4
+SLEEP_SECONDS_BETWEEN_RQ = 1
 
 # KRX configs
 KRX__GEN_OPT_URL = 'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
