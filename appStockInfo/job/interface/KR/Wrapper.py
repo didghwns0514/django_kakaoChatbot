@@ -28,7 +28,7 @@ from django.db import (
 )
 
 import logging
-logger = logging.getLogger('my')
+logger = logging.getLogger('appStockInfo')
 
 
 class MainWrapperKR:
@@ -40,9 +40,10 @@ class MainWrapperKR:
 
 
     def doAction(self):
-        logger.info("appStockInfo - MainWrapperKR - doAction")
+        logger.info("MainWrapperKR - doAction")
 
         #self.clearConnections()
+        #self.getLoggerForAllInfos()
 
         self.stockList.doAction()
         self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
@@ -61,10 +62,10 @@ class MainWrapperKR:
         self.createStockItemListSection()
 
         # 4-1) Delete StockItems
-        self.deleteStockItem()
+        self.deleteStockItem(datetime.now())
         # 4-2) Create StockItems
-        self.createStockItem(self.stockList.KOSPI, "KOSPI")
-        self.createStockItem(self.stockList.KOSDAQ, "KOSDAQ")
+        self.createStockItem()
+        self.createStockItem()
 
         # 5) Create DateStamp
         self.updateStockLastUpdateTime(dateStamp=datetime.now())
@@ -72,7 +73,7 @@ class MainWrapperKR:
 
     def clearConnections(self):
         # https://stackoverflow.com/questions/20058589/closing-db-connection-with-djangos-persistent-connection-in-a-multi-threaded-sc
-        logger.info("appStockInfo - MainWrapperKR - clearConnections")
+        logger.info("MainWrapperKR - clearConnections")
         close_old_connections()
 
 
@@ -88,7 +89,7 @@ class MainWrapperKR:
         stock_isInfoAvailable : Fetch된 market 데이터 존재하는 경우
             -> StockItem 등록시, 데이터 없으면 False로 다시 세팅
         """
-        logger.info("appStockInfo - MainWrapperKR - createStockTick")
+        logger.info("MainWrapperKR - createStockTick")
 
         StockTick.objects.all().update(stock_isInfoAvailable=True)
         exsist_stocktick = StockTick.objects.all().values_list('stock_tick', flat=True)
@@ -119,11 +120,11 @@ class MainWrapperKR:
         stock_tick : ForeignKey - Stock 코드
         stock_name : 실제 종목 이름 Mapping 값
         """
-        logger.info("appStockInfo - MainWrapperKR - createStockItemListName")
+        logger.info("MainWrapperKR - createStockItemListName")
 
         query_set = StockItemListName.objects.all()
         exsist_stocktick = query_set.values_list('stock_tick', flat=True)
-        exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="^[0-9]*$")
+        exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="^[a-zA-Z0-9]*$")
         create_new_stocktick = set(listStocks) - set(exsist_stocktick)
 
         # create new stock list item, update record
@@ -169,7 +170,7 @@ class MainWrapperKR:
                     stock_item.stock_name = self.stockList.tickerToName[str(stock_item.stock_tick)]
             # update
             StockItemListName.objects.bulk_update(exist_needsupdate_stocktick,
-                                                  update_fields=['stock_name'])
+                                                  fields=['stock_name'])
 
         # create
         StockTick.objects.bulk_create(filter_1)
@@ -185,7 +186,7 @@ class MainWrapperKR:
         if Relational Field doesn't exist in the table, return others
         -> create "Others"
         """
-        logger.info("appStockInfo - MainWrapperKR - createStockSection")
+        logger.info("MainWrapperKR - createStockSection")
 
         tmpOthers = StockSection.objects.filter(section_name="Others")
         if not tmpOthers.exists():
@@ -210,7 +211,7 @@ class MainWrapperKR:
             StockSection.objects.bulk_create(filter_1)
 
         else:  # not a dataframe
-            logger.warning("appStockInfo - MainWrapperKR - createStockSection; infoFinanceData Not a dataframe")
+            logger.warning("MainWrapperKR - createStockSection; infoFinanceData Not a dataframe")
 
 
     def createStockItemListSection(self):
@@ -222,7 +223,7 @@ class MainWrapperKR:
         if Relational Field doesn't exist in the table, return others
         -> create "Others"
         """
-        logger.info("appStockInfo - MainWrapperKR - createStockItemListSection")
+        logger.info("MainWrapperKR - createStockItemListSection")
 
         tmpStockSectionDF = self.stockInfo.infoFinanceData
 
@@ -232,8 +233,8 @@ class MainWrapperKR:
         #self.stockList.KOSPI + self.stockList.KOSDAQ
         tmp_new_stocksets = set(set(tmp_new_stockticks) - set(tmp_exist_stockitem))
         if tmp_new_stocksets:
-            logger.critical("appStockInfo - MainWrapperKR - createStockItemListSection; Update CSV")
-            logger.critical(f"appStockInfo - MainWrapperKR - createStockItemListSection; Missing information  : \n{tmp_new_stocksets}")
+            logger.critical("MainWrapperKR - createStockItemListSection; Update CSV")
+            logger.critical(f"MainWrapperKR - createStockItemListSection; Missing information  : \n{tmp_new_stocksets}")
 
         if isinstance(tmpStockSectionDF, pd.DataFrame) and '업종명' in tmpStockSectionDF:  # is a dataframe
             filter_1 = []
@@ -281,52 +282,57 @@ class MainWrapperKR:
             StockItemListSection.objects.bulk_create(filter_1)
 
         else:
-            logger.warning("appStockInfo - MainWrapperKR - createStockItemListSection; infoFinanceData Not a dataframe")
+            logger.warning("MainWrapperKR - createStockItemListSection; infoFinanceData Not a dataframe")
 
 
-    def deleteStockItem(self):
-        logger.info("appStockInfo - MainWrapperKR - deleteStockItem")
+    def deleteStockItem(self, dateStamp:datetime):
+        logger.info("MainWrapperKR - deleteStockItem")
 
-        # 모든것을 지움
-        StockItem.objects.all().delete()
+        # 모든것을 지움 -> 일자 지난 것에 대해서
+        time_End = dateStamp
+        time_Start = CF.getNextPredictionDate(
+            time_End - timedelta(days=CONF.MAX_DAYS_KEEP_OLD_STOCKITEMS)
+        )
+
+        StockItem.objects.filter(~Q(reg_date__range=(time_Start, time_End))).delete()
 
 
-    def createStockItem(self, listStocks: list, market):
+    def createStockItem(self):
         """
-        create Stock information CRUD
-        > 1) If StockName exists : Needs Update if StockTick is True
-        > 2) If StockName doesn't exists: Skip
-        [ORM]
-        stock_tick : ForeignKey - Stock 코드
-        stock_name : 실제 종목 이름 Mapping 값
+        create StockItem CRUD
         """
         # exsist_stocktick = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
-        logger.info("appStockInfo - MainWrapperKR - createStockItem")
-
-        assert (market in ["KOSPI", "KOSDAQ"])
+        logger.info("MainWrapperKR - createStockItem")
 
         # 정보 lookup 세팅
         filter_1 = []
         filter_2 = []
 
+        # Data 축적
+        # pull from Info
+        tmpInfoBasicKOSPI = self.stockInfo.infoBasicKOSPI
+        tmpTickerBasicKOSPI = self.stockInfo.infoTickerKOSPI
+        tmpInfoBasicKOSDAQ = self.stockInfo.infoBasicKOSDAQ
+        tmpTickerBasicKOSDAQ = self.stockInfo.infoTickerKOSDAQ
+
+        globalInfoBasic = {**tmpInfoBasicKOSPI, **tmpInfoBasicKOSDAQ}
+        globalTickerBasic = {**tmpTickerBasicKOSPI, **tmpTickerBasicKOSDAQ}
+
         # total iteration
-        exist_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
+        #exist_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
+        query_stockticks = StockTick.objects.filter(stock_isInfoAvailable=True)
+        exist_stockticks = query_stockticks.values_list('stock_tick', flat=True)
         for tick in exist_stockticks:
             try:
 
-                # pull from Info
-                if market == "KOSPI":
-                    tmpInfoBasic = self.stockInfo.infoBasicKOSPI[tick]
-                    tmpTickerBasic = self.stockInfo.infoTickerKOSPI[tick]
-                elif market == "KOSDAQ":
-                    tmpInfoBasic = self.stockInfo.infoBasicKOSDAQ[tick]
-                    tmpTickerBasic = self.stockInfo.infoTickerKOSDAQ[tick]
+                selectedInfoBasic = globalInfoBasic[tick]
+                selectedTickerBasic = globalTickerBasic[tick]
 
                 # Dataframe prep
                 concatDF = pd.concat(
                     [
-                        tmpInfoBasic,
-                        tmpTickerBasic
+                        selectedInfoBasic,
+                        selectedTickerBasic
                     ], axis=1
                 )
                 concatDF['ROE'] = concatDF['EPS'] / concatDF['BPS'] * 100
@@ -382,12 +388,12 @@ class MainWrapperKR:
                         )
                     )
             except Exception as e:
+                logger.critical(f"MainWrapperKR - StockItem error : {e}")
                 #traceback.print_exc()
-                logger.critical(f"appStockInfo - MainWrapperKR - StockItem error : {e}")
                 filter_2.append(tick)
 
         # update Non information available Object
-        logger.info(f"appStockInfo - MainWrapperKR - total info not available : {len(filter_2)}")
+        logger.info(f"MainWrapperKR - total info not available : {len(filter_2)}")
 
         # create
         StockItem.objects.bulk_create(filter_1)
@@ -412,6 +418,31 @@ class MainWrapperKR:
         )
 
 
+    def getLoggerForAllInfos(self):
+        """
+        to log informations given
+        """
+        # Dictionary
+        tmpInfoTickerKOSPI = self.stockInfo.infoTickerKOSPI
+        tmpInfoTickerKOSDAQ = self.stockInfo.infoTickerKOSDAQ
+        tmpInfoBasicKOSPI = self.stockInfo.infoBasicKOSPI
+        tmpInfoBasicKOSDAQ = self.stockInfo.infoBasicKOSDAQ
+
+        # List
+        tmpTickerKOSPI = self.stockList.KOSPI
+        tmpTickerKOSDAQ = self.stockList.KOSDAQ
+
+        # Check overlap
+        tmpOverlapp = set(tmpTickerKOSPI) & set(tmpTickerKOSDAQ)
+
+        logger.info(f"getLoggerForAllInfos - tmpInfoTickerKOSPI : {set(tmpInfoTickerKOSPI.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpInfoTickerKOSDAQ : {set(tmpInfoTickerKOSDAQ.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpInfoBasicKOSPI : {set(tmpInfoBasicKOSPI.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpInfoBasicKOSDAQ : {set(tmpInfoBasicKOSDAQ.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpTickerKOSPI : {set(tmpTickerKOSPI)}")
+        logger.info(f"getLoggerForAllInfos - tmpTickerKOSDAQ : {set(tmpTickerKOSDAQ)}")
+        logger.info(f"getLoggerForAllInfos - tmpOverlapp : {tmpOverlapp}")
+
 class GetStockList:
     def __init__(self):
         self.KOSDAQ = []
@@ -420,52 +451,60 @@ class GetStockList:
 
 
     def doAction(self):
-        logger.info("appStockInfo - GetStockList - doAction")
+        logger.info("GetStockList - doAction")
         self.getMarketTickers()
         self.getTickerNameKOSDAQ()
         self.getTickerNameKOSPI()
 
 
     def getMarketTickers(self):
-        logger.info("appStockInfo - GetStockList - getMarketTickers")
+        logger.info("GetStockList - getMarketTickers")
 
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             try:
-                self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
-                break
-            except:
-                continue
+                tmpData1 = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
+                if tmpData1:
+                    self.KOSDAQ = tmpData1
+                    logger.info(f"GetStockList - getMarketTickers; KOSDAQ Total data retrieved : {len(self.KOSDAQ)}")
+                    break
+            except: pass
+            time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+
         else:
-            logger.critical("appStockInfo - GetStockList - getMarketTickers; KOSDAQ No data retrieved")
+            logger.critical("GetStockList - getMarketTickers; KOSDAQ No data retrieved")
 
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             try:
-                self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
-                break
-            except:
-                continue
+                tmpData2 = list(set(stock.get_market_ticker_list(market="KOSPI")))
+                if tmpData2:
+                    self.KOSPI = tmpData2
+                    logger.info(f"GetStockList - getMarketTickers; KOSPI Total data retrieved : {len(self.KOSPI)}")
+                    break
+            except:pass
+            time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+
         else:
-            logger.critical("appStockInfo - GetStockList - getMarketTickers; KOSPI No data retrieved")
+            logger.critical("GetStockList - getMarketTickers; KOSPI No data retrieved")
 
 
     def getTickerNameKOSDAQ(self):
-        logger.info("appStockInfo - GetStockList - getTickerNameKOSDAQ")
+        logger.info("GetStockList - getTickerNameKOSDAQ")
         for stockTicker in self.KOSDAQ:
             try:
                 self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
             except:
                 self.tickerToName[stockTicker] = stockTicker
-                logger.critical(f"appStockInfo - GetStockList - getTickerNameKOSDAQ; No name retrieved, ticker : {stockTicker}")
+                logger.critical(f"GetStockList - getTickerNameKOSDAQ; No name retrieved, ticker : {stockTicker}")
 
 
     def getTickerNameKOSPI(self):
-        logger.info("appStockInfo - GetStockList - getTickerNameKOSPI")
+        logger.info("GetStockList - getTickerNameKOSPI")
         for stockTicker in self.KOSPI:
             try:
                 self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
             except:
                 self.tickerToName[stockTicker] = stockTicker
-                logger.critical(f"appStockInfo - GetStockList - getTickerNameKOSPI; No name retrieved, ticker : {stockTicker}")
+                logger.critical(f"GetStockList - getTickerNameKOSPI; No name retrieved, ticker : {stockTicker}")
 
     def __str__(self) -> str:
         return f'KOSDAQ : \n {self.KOSDAQ[:10]}  \nKOSPI : \n {self.KOSPI[:10]}'
@@ -484,7 +523,7 @@ class GetStockInfo:
 
 
     def doAction(self, listKOSPI: list, listKOSDAQ: list):
-        logger.info("appStockInfo - GetStockInfo - doAction")
+        logger.info("GetStockInfo - doAction")
         self.getBasicKOSPI(listKOSPI)
         self.getTickerKOSPI(listKOSPI)
 
@@ -496,7 +535,7 @@ class GetStockInfo:
 
     def getFinanceData(self):
         """업종 데이터"""
-        logger.info("appStockInfo - GetStockInfo - getFinanceData")
+        logger.info("GetStockInfo - getFinanceData")
 
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             self.infoFinanceData = FinaceInformation("KRX")
@@ -504,95 +543,103 @@ class GetStockInfo:
                 time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
                 continue
             else:  # got right data
+                logger.info(f"GetStockInfo - getFinanceData; Finance Total data length : {len(self.infoFinanceData)}")
                 break
 
         else:
-            logger.critical("appStockInfo - GetStockInfo - getFinanceData; Empty Dataframe")
+            logger.critical("GetStockInfo - getFinanceData; Empty Dataframe")
 
 
     def getBasicKOSDAQ(self, listKOSDAQ: list):
-        logger.info("appStockInfo - GetStockInfo - getBasicKOSDAQ")
+        logger.info("GetStockInfo - getBasicKOSDAQ")
         for stockID in listKOSDAQ:
 
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoBasicKOSDAQ[stockID] = stock.get_market_ohlcv_by_date(
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_ohlcv_by_date(
                         fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
                         ticker=stockID,
                         name_display=False
                     )
 
-                    if not self.infoBasicKOSDAQ[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoBasicKOSDAQ[stockID] = tmpData
                         break
-                    time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
-                else:
-                    logger.critical(f"appStockInfo - GetStockInfo - getBasicKOSDAQ; Empty Dataframe, ticker : {stockID}")
 
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getBasicKOSDAQ; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getBasicKOSDAQ; getBasic Total data length : {len(self.infoBasicKOSDAQ)}")
 
 
     def getTickerKOSDAQ(self, listKOSDAQ: list):
-        logger.info("appStockInfo - GetStockInfo - getTickerKOSDAQ")
+        logger.info("GetStockInfo - getTickerKOSDAQ")
         for stockID in listKOSDAQ:
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoTickerKOSDAQ[stockID] = stock.get_market_fundamental(
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_fundamental(
                         self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         self.setTimeFormat(datetime.today(), haveSeparator=False),
                         stockID, freq="d")
 
-                    if not self.infoTickerKOSDAQ[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoTickerKOSDAQ[stockID] = tmpData
                         break
-                    time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
-                else:
-                    logger.critical(f"appStockInfo - GetStockInfo - getTickerKOSDAQ; Empty Dataframe, ticker : {stockID}")
-
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getTickerKOSDAQ; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getTickerKOSDAQ; getTicker Total data length : {len(self.infoTickerKOSDAQ)}")
 
 
     def getBasicKOSPI(self, listKOSPI: list):
-        logger.info("appStockInfo - GetStockInfo - getBasicKOSPI")
+        logger.info("GetStockInfo - getBasicKOSPI")
         for stockID in listKOSPI:
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoBasicKOSPI[stockID] = stock.get_market_ohlcv_by_date(
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_ohlcv_by_date(
                         fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
                         ticker=stockID,
                         name_display=False
                     )
 
-                    if not self.infoBasicKOSPI[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoBasicKOSPI[stockID] = tmpData
                         break
-                    time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
-                else:
-                    logger.critical(f"appStockInfo - GetStockInfo - getBasicKOSPI; Empty Dataframe, ticker : {stockID}")
 
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getBasicKOSPI; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getBasicKOSPI; getBasic Total data length : {len(self.infoBasicKOSPI)}")
+
 
 
     def getTickerKOSPI(self, listKOSPI: list):
-        logger.info("appStockInfo - GetStockInfo - getTickerKOSPI")
+        logger.info("GetStockInfo - getTickerKOSPI")
         for stockID in listKOSPI:
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoTickerKOSPI[stockID] = stock.get_market_fundamental(
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_fundamental(
                         self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         self.setTimeFormat(datetime.today(), haveSeparator=False),
                         stockID, freq="d",
                     )
-                    if not self.infoTickerKOSPI[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoTickerKOSPI[stockID] = tmpData
                         break
-                    time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
-                else:
-                    logger.critical(f"appStockInfo - GetStockInfo - getTickerKOSPI; Empty Dataframe, ticker : {stockID}")
 
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getTickerKOSPI; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getTickerKOSPI; getTicker Total data length : {len(self.infoTickerKOSPI)}")
 
 
     def createStartDate(self, normDate=datetime.today()):
@@ -627,7 +674,7 @@ def FinaceInformation(market=None, timeoutSeconds=2):
 
     tmpData = sector_KS.append(sector_KQ)
     if isinstance(tmpData, pd.DataFrame) and '업종명' in tmpData:
-        logger.info("appStockInfo - FinaceInformation - Dataframe is obtained")
+        logger.info("FinaceInformation - Dataframe is obtained")
     return tmpData
 
 

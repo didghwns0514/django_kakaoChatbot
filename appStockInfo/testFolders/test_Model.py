@@ -288,9 +288,35 @@ class CreateKRStocks(TestCase):
         ) as f:
             mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
 
+        # Check
+        tmpInfoTickerKOSPI = mainWrapper.stockInfo.infoTickerKOSPI.keys()
+        tmpInfoTickerKOSDAQ = mainWrapper.stockInfo.infoTickerKOSDAQ.keys()
+        tmpInfoBasicKOSPI = mainWrapper.stockInfo.infoBasicKOSPI.keys()
+        tmpInfoBasicKOSDAQ = mainWrapper.stockInfo.infoBasicKOSDAQ.keys()
+        # List
+        tmpTickerKOSPI = mainWrapper.stockList.KOSPI
+        tmpTickerKOSDAQ = mainWrapper.stockList.KOSDAQ
+
+        # Check - print
+        print(f'tmpInfoTickerKOSPI : {len(tmpInfoTickerKOSPI)}')
+        print(f'tmpInfoTickerKOSDAQ : {len(tmpInfoTickerKOSDAQ)}')
+        print(f'tmpInfoBasicKOSPI : {len(tmpInfoBasicKOSPI)}')
+        print(f'tmpInfoBasicKOSDAQ : {len(tmpInfoBasicKOSDAQ)}')
+        print(f'tmpTickerKOSPI : {len(tmpTickerKOSPI)}')
+        print(f'tmpTickerKOSDAQ : {len(tmpTickerKOSDAQ)}')
+        # Check - partial
+        CheckTick ="950210"
+        print(f'in tmpInfoTickerKOSPI ? : {CheckTick in tmpInfoTickerKOSPI }')
+        print(f'in tmpInfoTickerKOSDAQ ? : {CheckTick in tmpInfoTickerKOSDAQ }')
+        print(f'in tmpInfoBasicKOSPI ? : {CheckTick in tmpInfoBasicKOSPI }')
+        print(f'in tmpInfoBasicKOSDAQ ? : {CheckTick in tmpInfoBasicKOSDAQ }')
+        print(f'in tmpTickerKOSPI ? : {CheckTick in tmpTickerKOSPI }')
+        print(f'in tmpTickerKOSDAQ ? : {CheckTick in tmpTickerKOSDAQ }')
+
+
         # Test
         # Required
-        # mainWrapper.clearConnections()
+        #mainWrapper.getLoggerForAllInfos()
 
         mainWrapper.createStockTick(
             mainWrapper.stockList.KOSPI, "KOSPI"
@@ -308,12 +334,7 @@ class CreateKRStocks(TestCase):
         mainWrapper.createStockItemListSection()
 
         # run tests
-        mainWrapper.createStockItem(
-            mainWrapper.stockList.KOSPI, "KOSPI"
-        )
-        mainWrapper.createStockItem(
-            mainWrapper.stockList.KOSDAQ, "KOSDAQ"
-        )
+        mainWrapper.createStockItem()
 
         tickSamsung = "005930"
         sectionSamsung = "전기전자"
@@ -373,6 +394,35 @@ class CreateKRStocks(TestCase):
             ).exists(), True
         )
 
+        # Stock Item delete check - Samsung
+        tmpQuery_StockItemSamsung = StockItem.objects.filter(
+            stock_name__stock_tick__stock_tick=tickSamsung
+        )
+        if tmpQuery_StockItemSamsung.exists():
+            tmpQuery_StockItemsFilter = \
+                tmpQuery_StockItem.filter(
+                    stock_name__stock_tick__stock_tick=tickSamsung
+                ).order_by('-reg_date')
+            firstRecord = tmpQuery_StockItemsFilter.first()
+            lastRecord = tmpQuery_StockItemsFilter.last()
+            print(f'lastRecord, firstRecord : {lastRecord.reg_date}, {firstRecord.reg_date}')
+            firstRecordDate = datetime.datetime(
+                firstRecord.reg_date.year,
+                firstRecord.reg_date.month,
+                firstRecord.reg_date.day,
+                hour=19
+            )
+            mainWrapper.deleteStockItem(firstRecordDate)
+
+            # Requery
+            tmpQuery_StockItem = StockItem.objects.filter(
+                  Q(stock_name__stock_tick__stock_tick=tickSamsung) \
+                & Q(reg_date__range=(lastRecord.reg_date, firstRecord.reg_date))
+            )
+            self.assertEqual(
+                tmpQuery_StockItem.exists(), True
+            )
+        else: raise Exception("Wrong path")
 
     def test_updateStockLastUpdateTime(self):
         mainWrapper = MainWrapperKR()
