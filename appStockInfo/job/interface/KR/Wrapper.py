@@ -65,7 +65,6 @@ class MainWrapperKR:
         self.deleteStockItem(datetime.now())
         # 4-2) Create StockItems
         self.createStockItem()
-        self.createStockItem()
 
         # 5) Create DateStamp
         self.updateStockLastUpdateTime(dateStamp=datetime.now())
@@ -307,6 +306,7 @@ class MainWrapperKR:
         # 정보 lookup 세팅
         filter_1 = []
         filter_2 = []
+        cntExisting = 0
 
         # Data 축적
         # pull from Info
@@ -321,7 +321,9 @@ class MainWrapperKR:
         # total iteration
         #exist_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
         query_stockticks = StockTick.objects.filter(stock_isInfoAvailable=True)
+        query_stockitems = StockItem.objects.filter(stock_name__stock_tick__stock_isInfoAvailable=True)
         exist_stockticks = query_stockticks.values_list('stock_tick', flat=True)
+        cntExisting = len(query_stockitems)
         for tick in exist_stockticks:
             try:
 
@@ -335,6 +337,8 @@ class MainWrapperKR:
                         selectedTickerBasic
                     ], axis=1
                 )
+
+                # New column
                 concatDF['ROE'] = concatDF['EPS'] / concatDF['BPS'] * 100
 
                 # -> Nan value removal
@@ -358,6 +362,24 @@ class MainWrapperKR:
                 tmpStockName = StockItemListName.objects.get(
                     stock_tick=tick
                 )
+
+                # Check for existing records that doesn't need update
+                # filter tick's date onece more
+                stockItemsQuery = query_stockitems.filter(
+                         Q(stock_name__stock_tick__stock_tick=tick)
+                    ).order_by('-reg_date')
+                if stockItemsQuery.exists():
+                    # print(f'len(stockItemsQuery) : {len(stockItemsQuery)}')
+                    latestDate = stockItemsQuery.first().reg_date
+                    oldestDate = stockItemsQuery.last().reg_date
+                    # print(f'latestDate : {latestDate}, oldestDate : {oldestDate}')
+                    # print(f'type(oldestDate) : {type(oldestDate)}')
+                    # print(f'before len(concatDF) : {len(concatDF)}')
+                    concatDF = concatDF[
+                        (concatDF.index < oldestDate) | (concatDF.index > latestDate)
+                    ]
+                    # print(f'after len(concatDF) : {len(concatDF)}')
+                    cntExisting -= len(concatDF)
 
                 # iteration
                 for idx, row in concatDF.iterrows():
@@ -389,12 +411,12 @@ class MainWrapperKR:
                     )
             except Exception as e:
                 logger.critical(f"MainWrapperKR - StockItem error : {e}")
-                #traceback.print_exc()
+                traceback.print_exc()
                 filter_2.append(tick)
 
         # update Non information available Object
         logger.info(f"MainWrapperKR - total info not available : {len(filter_2)}")
-
+        logger.info(f"MainWrapperKR - excluded existing infos : {cntExisting}")
         # create
         StockItem.objects.bulk_create(filter_1)
 

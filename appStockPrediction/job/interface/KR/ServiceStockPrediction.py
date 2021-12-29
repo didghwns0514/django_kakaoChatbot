@@ -29,7 +29,7 @@ class MainWrapperKR:
         """
         train XGBoost and CRUD
         """
-        pass
+        tmpMainDF, tmpPredDF = self.createPredictionPrep()
 
     def createPredictionPrep(self) -> [pd.DataFrame, pd.DataFrame]:
         """
