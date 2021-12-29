@@ -34,37 +34,39 @@ class CommonFunction(TestCase):
 
 class MainWrapper(TestCase):
 
+    def test_createPredictionPrep(self):
 
-    def test_createPrediction(self):
+        # Required
+        self.base()
 
-        # R
-        self.base_samsung()
+        # Test
+        query_stockitem = StockItem.objects.filter(
+            stock_name__stock_tick__stock_isInfoAvailable=True
+        )
+        query_stocktick = StockTick.objects.filter(
+            stock_isInfoAvailable=True
+        )
+        mainWrapperKR = MainWrapperKR()
+        tmpMainDF, tmpPredDF = mainWrapperKR.createPredictionPrep()
+
+        self.assertEqual(
+            len(query_stockitem) - len(query_stocktick),
+            len(tmpMainDF)
+        )
+        self.assertEqual(
+            len(query_stocktick),
+            len(tmpPredDF)
+        )
+
+    def test_createDataframe(self):
+
+        # Required
+        self.base()
 
         tickSamsung = "005930"
         sectionSamsung = "전기전자"
         callDate = datetime.date(2021,12,27)
 
-        column_names = [
-            "section_integer",
-            "total_sum",
-            "time_elapsed",
-            "open",
-            "high",
-            "low",
-            "close",
-            "volume",
-            "div",
-            "per",
-            "pbr",
-            "roe",
-            "answer"
-        ]
-        globalDataframeMain = pd.DataFrame(
-            columns=column_names
-        )
-        globalDataframePredictions = pd.DataFrame(
-            columns=column_names[:len(column_names)-1]
-        )
 
         # cached stockitems
         all_Stockitems = StockItem.objects.all()
@@ -74,6 +76,8 @@ class MainWrapper(TestCase):
         exist_stocktick = StockTick.objects.filter(
             Q(stock_tick=tickSamsung)
         )
+
+        # Requirements
         self.assertEqual(
             exist_stocktick.exists(), True
         )
@@ -89,8 +93,8 @@ class MainWrapper(TestCase):
         tmpMain, tmpPrediction = mainWrapperKR.createDataframe(tickSamsung, all_Stockitems=all_Stockitems,
                                                                callDate=callDate)
 
-        print(f'tmpMain.head(3) : {tmpMain.head(3)}')
-        print(f'tmpPrediction.head(1) : {tmpPrediction.head(1)}')
+        print(f'tmpMain.head(3) : \n{tmpMain}')
+        print(f'tmpPrediction.head(1) : \n{tmpPrediction}')
 
 
         # Test
@@ -103,7 +107,8 @@ class MainWrapper(TestCase):
             len(tmpPrediction), 1
         )
 
-    def base_samsung(self):
+
+    def base(self):
         """
         for base needed for appStockPrediction
         """
@@ -133,21 +138,33 @@ class MainWrapper(TestCase):
         ) as f:
             self.mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
 
-        tickSamsung = "005930"
-        sectionSamsung = "전기전자"
 
         # Test
         # Required
         self.mainWrapper.createStockTick(
-            [tickSamsung], "KOSPI"
+            self.mainWrapper.stockList.KOSPI, "KOSPI"
         )
-
+        self.mainWrapper.createStockTick(
+            self.mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
         self.mainWrapper.createStockItemListName(
-            [tickSamsung], "KOSPI"
+            self.mainWrapper.stockList.KOSPI, "KOSPI"
         )
-
+        self.mainWrapper.createStockItemListName(
+            self.mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
         self.mainWrapper.createStockSection()
         self.mainWrapper.createStockItemListSection()
 
         # run tests
         self.mainWrapper.createStockItem()
+
+        tickSamsung = "005930"
+        sectionSamsung = "전기전자"
+
+        # light check
+        self.assertEquals(
+            StockItem.objects.filter(
+                stock_name__stock_tick__stock_tick=tickSamsung
+            ).exists(), True
+        )
