@@ -6,14 +6,15 @@ from appStockInfo.models import (
     StockTick
 )
 
-import ConfigFile as CF
+import ConfigFile as CONF
+import CommonFunction as CF
 
 import datetime
 from pytimekr import pytimekr
 import pandas as pd
 
 import logging
-logger = logging.getLogger('my')
+logger = logging.getLogger('appStockPrediction')
 
 class MainWrapperKR:
 
@@ -30,34 +31,16 @@ class MainWrapperKR:
         """
         pass
 
-    def createPredictionPrep(self):
+    def createPredictionPrep(self) -> [pd.DataFrame, pd.DataFrame]:
         """
         create Dataframe and returns total stock dataframe
         for XGBoost prediction
         """
         # global dataframe
-        column_names = [
-            "section_integer",
-            "total_sum",
-            "time_elapsed",
-            "open",
-            "high",
-            "low",
-            "close",
-            "volume",
-            "div",
-            "per",
-            "pbr",
-            "roe",
-            "answer"
-        ]
-        globalDataframeMain = pd.DataFrame(
-            columns=column_names
-        )
-        globalDataframePredictions = pd.DataFrame(
-            columns=column_names[:len(column_names)-1] # "answer" removed
-        )
-        globalDate = getNextPredictionDate(datetime.datetime.now())
+        globalDataframeMain = CF.generateEmptyDataframe("Main")
+        globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
+
+        globalDate = CF.getNextPredictionDate(datetime.datetime.now())
 
         # cached stockitems
         all_Stockitems = StockItem.objects.all()
@@ -68,11 +51,7 @@ class MainWrapperKR:
         )
 
         for tick in exist_stocktick:
-            tmpMain, tmpPrediction = self.createDataframe(tick,
-                                     column_names=column_names,
-                                     all_Stockitems=all_Stockitems,
-                                     callDate=globalDate
-                                 )
+            tmpMain, tmpPrediction = self.createDataframe(tick, all_Stockitems=all_Stockitems, callDate=globalDate)
             globalDataframeMain = pd.concat([
                 globalDataframeMain, tmpMain
             ])
@@ -80,14 +59,15 @@ class MainWrapperKR:
                 globalDataframePredictions, tmpPrediction
             ])
 
+        return globalDataframeMain, globalDataframePredictions
+
 
     def createDataframe(self, tick,
-                        column_names:list,
                         all_Stockitems:QuerySet,
-                        callDate:datetime.date):
+                        callDate:datetime.date) -> [pd.DataFrame, pd.DataFrame]:
 
-        globalDataframeMain:pd.DataFrame = pd.DataFrame(columns=column_names)
-        globalDataframePredictions:pd.DataFrame = pd.DataFrame(columns=column_names[:len(column_names) - 1])
+        globalDataframeMain = CF.generateEmptyDataframe("Main")
+        globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
 
         try:
             tmpQuery = all_Stockitems.filter(stock_name__stock_tick__stock_tick=tick).order_by('-reg_date')
@@ -129,29 +109,7 @@ class MainWrapperKR:
         finally:
             return globalDataframeMain, globalDataframePredictions
 
-def getNextPredictionDate(callDate:datetime.date):
-    # https://velog.io/@vanang7/Python으로-공휴일-리스트를-만들자
-    for _ in range(CF.TOTAL_RETRY_FOR_FETCH_FAIL):
-        kr_holidays = pytimekr.holidays()
-        if kr_holidays: break
-    else: logger.critical('getNextPredictionDate; Date generation failed')
 
-    if 16 < callDate.hour < 24:
-        callDate += datetime.timedelta(days=1)
-
-    callDateFiltered = datetime.datetime(
-        callDate.year, callDate.month, callDate.day
-    )
-
-    # 0, 1, 2, 3, 4, 5, 6
-    # 월, 화, 수, 목, 금, 토, 일
-    counter = 0
-    while ( callDateFiltered.weekday() in [5, 6]) or callDateFiltered in kr_holidays or \
-        counter >= 7:
-        callDateFiltered += datetime.timedelta(days=1)
-        counter += 1
-
-    return callDateFiltered
 
 # active information columns only selected
 # exist_stockitems = StockItem.objects.filter(

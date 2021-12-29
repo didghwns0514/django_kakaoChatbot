@@ -12,8 +12,10 @@ from appStockInfo.models import (
 
 )
 from appStockPrediction.job.interface.KR.ServiceStockPrediction import (
-    MainWrapperKR, getNextPredictionDate
+    MainWrapperKR
 )
+import ConfigFile as CONF
+import CommonFunction as CF
 
 from appStockInfo.job.interface.KR.Wrapper import MainWrapperKR as MKR
 
@@ -26,7 +28,7 @@ class CommonFunction(TestCase):
     def test_getNextPredictionDate(self):
         stampDate = datetime.datetime(2021,12,11,19)
         print(f'start date : {stampDate}')
-        newDate = getNextPredictionDate(stampDate)
+        newDate = CF.getNextPredictionDate(stampDate)
         print(f'end date : {newDate}')
 
 
@@ -84,12 +86,8 @@ class MainWrapper(TestCase):
 
         # test
         mainWrapperKR = MainWrapperKR()
-        tmpMain, tmpPrediction = mainWrapperKR.createDataframe(
-            tickSamsung,
-            column_names=column_names,
-            all_Stockitems=all_Stockitems,
-            callDate=callDate
-        )
+        tmpMain, tmpPrediction = mainWrapperKR.createDataframe(tickSamsung, all_Stockitems=all_Stockitems,
+                                                               callDate=callDate)
 
         print(f'tmpMain.head(3) : {tmpMain.head(3)}')
         print(f'tmpPrediction.head(1) : {tmpPrediction.head(1)}')
@@ -152,6 +150,4 @@ class MainWrapper(TestCase):
         self.mainWrapper.createStockItemListSection()
 
         # run tests
-        self.mainWrapper.createStockItem(
-            [tickSamsung], "KOSPI"
-        )
+        self.mainWrapper.createStockItem()
