@@ -25,7 +25,7 @@ def getNextPredictionDate(callDate:datetime.datetime):
         if kr_holidays: break
     else: logger.critical('getNextPredictionDate; Date generation failed')
 
-    if 16 < callDate.hour < 24:
+    if CONF.MARKET_TOTAL_FINISH_HOUR <= callDate.hour < 24:
         callDate += datetime.timedelta(days=1)
 
     callDateFiltered = datetime.datetime(
@@ -54,7 +54,7 @@ def generateEmptyDataframe(switch:str="Main"):
         return globalDataframeMain
     elif switch == "Prediction":
         globalDataframePredictions = pd.DataFrame(
-            columns=CONF.DATAFRAME_COLUMN_NAMES[:len(CONF.DATAFRAME_COLUMN_NAMES) - 1]  # "answer" removed
+            columns=CONF.DATAFRAME_COLUMN_NAMES[:len(CONF.DATAFRAME_COLUMN_NAMES) - 2]  # "answer" / "tick" removed
         )
         return globalDataframePredictions
     else:

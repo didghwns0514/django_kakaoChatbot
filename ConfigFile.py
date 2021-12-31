@@ -8,6 +8,8 @@ SLEEP_SECONDS_BETWEEN_RQ = 1.4
 # For keeping old records
 MAX_DAYS_KEEP_OLD_STOCKITEMS = 30
 
+# Stock Time hour in KTZ
+MARKET_TOTAL_FINISH_HOUR = 17
 
 # Dataframe columns
 DATAFRAME_COLUMN_NAMES = [
@@ -23,7 +25,8 @@ DATAFRAME_COLUMN_NAMES = [
         "per",
         "pbr",
         "roe",
-        "answer"
+        "answer",
+        "tick"
 ]
 
 # KRX configs

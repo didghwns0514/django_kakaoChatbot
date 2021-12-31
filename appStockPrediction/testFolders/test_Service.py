@@ -34,6 +34,19 @@ class CommonFunction(TestCase):
 
 class MainWrapper(TestCase):
 
+    def test_createPrediction(self):
+
+        # Required
+        self.base()
+
+        # Test
+        mainWrapperKR = MainWrapperKR()
+        predictionDF, predictionDay = mainWrapperKR.createPrediction()
+
+        print(f'predictionDF.head(10): \n{predictionDF.head(10)}')
+        print(f'predictionDay : {predictionDay}')
+
+
     def test_createPredictionPrep(self):
 
         # Required
@@ -48,6 +61,11 @@ class MainWrapper(TestCase):
         )
         mainWrapperKR = MainWrapperKR()
         tmpMainDF, tmpPredDF = mainWrapperKR.createPredictionPrep()
+
+        print(f'tmpMainDF : \n{tmpMainDF.head(3)}')
+        print(f'tmpPredDF : \n{tmpPredDF.head(1)}')
+        print(f'tmpMainDF.dtypes : \n{tmpMainDF.dtypes}')
+        print(f'tmpPredDF.dtypes : \n{tmpPredDF.dtypes}')
 
         self.assertEqual(
             len(query_stockitem) - len(query_stocktick),
@@ -65,7 +83,7 @@ class MainWrapper(TestCase):
 
         tickSamsung = "005930"
         sectionSamsung = "전기전자"
-        callDate = datetime.date(2021,12,27)
+        callDate = datetime.datetime(2021,12,27)
 
 
         # cached stockitems
