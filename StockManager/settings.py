@@ -248,6 +248,26 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'standard',
         },
+        'appStockInfo': {
+            'level': 'INFO',
+            'encoding': 'utf-8',
+            'filters': ['require_debug_false'],
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs/appStockInfo.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
+        'appStockPrediction': {
+            'level': 'INFO',
+            'encoding': 'utf-8',
+            'filters': ['require_debug_false'],
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs/appStockPrediction.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
     },
     'loggers': {
         'django': {
@@ -255,12 +275,20 @@ LOGGING = {
             'level': 'INFO',
         },
         'django.server': {
-            'handlers': ['django.server'],
+            'handlers': ['django.server', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
         'my': {
             'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'appStockInfo': {
+            'handlers': ['console', 'appStockInfo'],
+            'level': 'INFO',
+        },
+        'appStockPrediction': {
+            'handlers': ['console', 'appStockPrediction'],
             'level': 'INFO',
         },
     }

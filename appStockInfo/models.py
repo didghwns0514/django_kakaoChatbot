@@ -42,7 +42,7 @@ class StockItem(models.Model):
                                             default="Dummy",
                                           )
 
-    reg_date = models.DateField(default=timezone.now, null=True)
+    reg_date = models.DateField(default=timezone.now, null=False)
 
     open = models.FloatField(default=0.0)
     high = models.FloatField(default=0.0)

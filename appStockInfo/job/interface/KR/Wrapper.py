@@ -1,3 +1,5 @@
+import traceback
+
 from django.db.models import Q, F
 from django.utils import timezone
 from appStockInfo.models import (
@@ -18,7 +20,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests as rq
 from io import BytesIO
-import traceback
+import time
 
 from django.db import (
     close_old_connections,
@@ -26,8 +28,7 @@ from django.db import (
 )
 
 import logging
-
-logger = logging.getLogger('my')
+logger = logging.getLogger('appStockInfo')
 
 
 class MainWrapperKR:
@@ -42,6 +43,7 @@ class MainWrapperKR:
         logger.info("MainWrapperKR - doAction")
 
         #self.clearConnections()
+        #self.getLoggerForAllInfos()
 
         self.stockList.doAction()
         self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
@@ -60,10 +62,9 @@ class MainWrapperKR:
         self.createStockItemListSection()
 
         # 4-1) Delete StockItems
-        self.deleteStockItem()
+        self.deleteStockItem(datetime.now())
         # 4-2) Create StockItems
-        self.createStockItem(self.stockList.KOSPI, "KOSPI")
-        self.createStockItem(self.stockList.KOSDAQ, "KOSDAQ")
+        self.createStockItem()
 
         # 5) Create DateStamp
         self.updateStockLastUpdateTime(dateStamp=datetime.now())
@@ -122,7 +123,7 @@ class MainWrapperKR:
 
         query_set = StockItemListName.objects.all()
         exsist_stocktick = query_set.values_list('stock_tick', flat=True)
-        exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="^[0-9]*$")
+        exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="^[a-zA-Z0-9]*$")
         create_new_stocktick = set(listStocks) - set(exsist_stocktick)
 
         # create new stock list item, update record
@@ -168,7 +169,7 @@ class MainWrapperKR:
                     stock_item.stock_name = self.stockList.tickerToName[str(stock_item.stock_tick)]
             # update
             StockItemListName.objects.bulk_update(exist_needsupdate_stocktick,
-                                                  update_fields=['stock_name'])
+                                                  fields=['stock_name'])
 
         # create
         StockTick.objects.bulk_create(filter_1)
@@ -226,8 +227,9 @@ class MainWrapperKR:
         tmpStockSectionDF = self.stockInfo.infoFinanceData
 
         # 없는 종목 (추가해야하는지 확인)
-        tmp_exist_stockitem = StockItemListSection.objects.all().values_list('stock_tick')
-        tmp_new_stockticks = self.stockList.KOSPI + self.stockList.KOSDAQ
+        tmp_exist_stockitem = StockItemListSection.objects.all().values_list('stock_tick', flat=True)
+        tmp_new_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
+        #self.stockList.KOSPI + self.stockList.KOSDAQ
         tmp_new_stocksets = set(set(tmp_new_stockticks) - set(tmp_exist_stockitem))
         if tmp_new_stocksets:
             logger.critical("MainWrapperKR - createStockItemListSection; Update CSV")
@@ -282,50 +284,61 @@ class MainWrapperKR:
             logger.warning("MainWrapperKR - createStockItemListSection; infoFinanceData Not a dataframe")
 
 
-    def deleteStockItem(self):
+    def deleteStockItem(self, dateStamp:datetime):
         logger.info("MainWrapperKR - deleteStockItem")
 
-        # 모든것을 지움
-        StockItem.objects.all().delete()
+        # 모든것을 지움 -> 일자 지난 것에 대해서
+        time_End = dateStamp
+        time_Start = CF.getNextPredictionDate(
+            time_End - timedelta(days=CONF.MAX_DAYS_KEEP_OLD_STOCKITEMS)
+        )
+
+        StockItem.objects.filter(~Q(reg_date__range=(time_Start, time_End))).delete()
 
 
-    def createStockItem(self, listStocks: list, market):
+    def createStockItem(self):
         """
-        create Stock information CRUD
-        > 1) If StockName exists : Needs Update if StockTick is True
-        > 2) If StockName doesn't exists: Skip
-        [ORM]
-        stock_tick : ForeignKey - Stock 코드
-        stock_name : 실제 종목 이름 Mapping 값
+        create StockItem CRUD
         """
         # exsist_stocktick = StockItemListName.objects.filter(stock_tick__stock_isInfoAvailable=True)
         logger.info("MainWrapperKR - createStockItem")
 
-        assert (market in ["KOSPI", "KOSDAQ"])
-
         # 정보 lookup 세팅
         filter_1 = []
         filter_2 = []
+        cntExisting = 0
+
+        # Data 축적
+        # pull from Info
+        tmpInfoBasicKOSPI = self.stockInfo.infoBasicKOSPI
+        tmpTickerBasicKOSPI = self.stockInfo.infoTickerKOSPI
+        tmpInfoBasicKOSDAQ = self.stockInfo.infoBasicKOSDAQ
+        tmpTickerBasicKOSDAQ = self.stockInfo.infoTickerKOSDAQ
+
+        globalInfoBasic = {**tmpInfoBasicKOSPI, **tmpInfoBasicKOSDAQ}
+        globalTickerBasic = {**tmpTickerBasicKOSPI, **tmpTickerBasicKOSDAQ}
 
         # total iteration
-        for tick in listStocks:
+        #exist_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
+        query_stockticks = StockTick.objects.filter(stock_isInfoAvailable=True)
+        query_stockitems = StockItem.objects.filter(stock_name__stock_tick__stock_isInfoAvailable=True)
+        exist_stockticks = query_stockticks.values_list('stock_tick', flat=True)
+        cntExisting = len(query_stockitems)
+        for tick in exist_stockticks:
             try:
 
-                # pull from Info
-                if market == "KOSPI":
-                    tmpInfoBasic = self.stockInfo.infoBasicKOSPI[tick]
-                    tmpTickerBasic = self.stockInfo.infoTickerKOSPI[tick]
-                elif market == "KOSDAQ":
-                    tmpInfoBasic = self.stockInfo.infoBasicKOSDAQ[tick]
-                    tmpTickerBasic = self.stockInfo.infoTickerKOSDAQ[tick]
+                selectedInfoBasic = globalInfoBasic[tick]
+                selectedTickerBasic = globalTickerBasic[tick]
 
                 # Dataframe prep
                 concatDF = pd.concat(
                     [
-                        tmpInfoBasic,
-                        tmpTickerBasic
+                        selectedInfoBasic,
+                        selectedTickerBasic
                     ], axis=1
                 )
+
+                # New column
                 concatDF['ROE'] = concatDF['EPS'] / concatDF['BPS'] * 100
 
                 # -> Nan value removal
@@ -349,6 +362,24 @@ class MainWrapperKR:
                 tmpStockName = StockItemListName.objects.get(
                     stock_tick=tick
                 )
+
+                # Check for existing records that doesn't need update
+                # filter tick's date onece more
+                stockItemsQuery = query_stockitems.filter(
+                         Q(stock_name__stock_tick__stock_tick=tick)
+                    ).order_by('-reg_date')
+                if stockItemsQuery.exists():
+                    # print(f'len(stockItemsQuery) : {len(stockItemsQuery)}')
+                    latestDate = stockItemsQuery.first().reg_date
+                    oldestDate = stockItemsQuery.last().reg_date
+                    # print(f'latestDate : {latestDate}, oldestDate : {oldestDate}')
+                    # print(f'type(oldestDate) : {type(oldestDate)}')
+                    # print(f'before len(concatDF) : {len(concatDF)}')
+                    concatDF = concatDF[
+                        (concatDF.index < oldestDate) | (concatDF.index > latestDate)
+                    ]
+                    # print(f'after len(concatDF) : {len(concatDF)}')
+                    cntExisting -= len(concatDF)
 
                 # iteration
                 for idx, row in concatDF.iterrows():
@@ -379,11 +410,13 @@ class MainWrapperKR:
                         )
                     )
             except Exception as e:
+                logger.critical(f"MainWrapperKR - StockItem error : {e}")
+                #traceback.print_exc()
                 filter_2.append(tick)
 
         # update Non information available Object
         logger.info(f"MainWrapperKR - total info not available : {len(filter_2)}")
-
+        logger.info(f"MainWrapperKR - excluded existing infos : {cntExisting}")
         # create
         StockItem.objects.bulk_create(filter_1)
 
@@ -400,12 +433,37 @@ class MainWrapperKR:
         """
         update dateime of last update of KR stocks
         """
-        logger.info("MainWrapperKR - updateStockLastUpdateTime")
+        logger.info("appStockInfo - MainWrapperKR - updateStockLastUpdateTime")
 
         StockLastUpdateTime.objects.create(
             update_time=dateStamp
         )
 
+
+    def getLoggerForAllInfos(self):
+        """
+        to log informations given
+        """
+        # Dictionary
+        tmpInfoTickerKOSPI = self.stockInfo.infoTickerKOSPI
+        tmpInfoTickerKOSDAQ = self.stockInfo.infoTickerKOSDAQ
+        tmpInfoBasicKOSPI = self.stockInfo.infoBasicKOSPI
+        tmpInfoBasicKOSDAQ = self.stockInfo.infoBasicKOSDAQ
+
+        # List
+        tmpTickerKOSPI = self.stockList.KOSPI
+        tmpTickerKOSDAQ = self.stockList.KOSDAQ
+
+        # Check overlap
+        tmpOverlapp = set(tmpTickerKOSPI) & set(tmpTickerKOSDAQ)
+
+        logger.info(f"getLoggerForAllInfos - tmpInfoTickerKOSPI : {set(tmpInfoTickerKOSPI.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpInfoTickerKOSDAQ : {set(tmpInfoTickerKOSDAQ.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpInfoBasicKOSPI : {set(tmpInfoBasicKOSPI.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpInfoBasicKOSDAQ : {set(tmpInfoBasicKOSDAQ.keys())}")
+        logger.info(f"getLoggerForAllInfos - tmpTickerKOSPI : {set(tmpTickerKOSPI)}")
+        logger.info(f"getLoggerForAllInfos - tmpTickerKOSDAQ : {set(tmpTickerKOSDAQ)}")
+        logger.info(f"getLoggerForAllInfos - tmpOverlapp : {tmpOverlapp}")
 
 class GetStockList:
     def __init__(self):
@@ -426,19 +484,27 @@ class GetStockList:
 
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             try:
-                self.KOSDAQ = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
-                break
-            except:
-                continue
+                tmpData1 = list(set(stock.get_market_ticker_list(market="KOSDAQ")))
+                if tmpData1:
+                    self.KOSDAQ = tmpData1
+                    logger.info(f"GetStockList - getMarketTickers; KOSDAQ Total data retrieved : {len(self.KOSDAQ)}")
+                    break
+            except: pass
+            time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+
         else:
             logger.critical("GetStockList - getMarketTickers; KOSDAQ No data retrieved")
 
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             try:
-                self.KOSPI = list(set(stock.get_market_ticker_list(market="KOSPI")))
-                break
-            except:
-                continue
+                tmpData2 = list(set(stock.get_market_ticker_list(market="KOSPI")))
+                if tmpData2:
+                    self.KOSPI = tmpData2
+                    logger.info(f"GetStockList - getMarketTickers; KOSPI Total data retrieved : {len(self.KOSPI)}")
+                    break
+            except:pass
+            time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+
         else:
             logger.critical("GetStockList - getMarketTickers; KOSPI No data retrieved")
 
@@ -496,9 +562,12 @@ class GetStockInfo:
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             self.infoFinanceData = FinaceInformation("KRX")
             if not ((not self.infoFinanceData.empty) and '업종명' in self.infoFinanceData):
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
                 continue
             else:  # got right data
+                logger.info(f"GetStockInfo - getFinanceData; Finance Total data length : {len(self.infoFinanceData)}")
                 break
+
         else:
             logger.critical("GetStockInfo - getFinanceData; Empty Dataframe")
 
@@ -507,81 +576,92 @@ class GetStockInfo:
         logger.info("GetStockInfo - getBasicKOSDAQ")
         for stockID in listKOSDAQ:
 
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoBasicKOSDAQ[stockID] = stock.get_market_ohlcv_by_date(
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_ohlcv_by_date(
                         fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
                         ticker=stockID,
                         name_display=False
                     )
 
-                    if not self.infoBasicKOSDAQ[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoBasicKOSDAQ[stockID] = tmpData
                         break
-                else:
-                    logger.critical(f"GetStockInfo - getBasicKOSDAQ; Empty Dataframe, ticker : {stockID}")
 
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getBasicKOSDAQ; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getBasicKOSDAQ; getBasic Total data length : {len(self.infoBasicKOSDAQ)}")
 
 
     def getTickerKOSDAQ(self, listKOSDAQ: list):
         logger.info("GetStockInfo - getTickerKOSDAQ")
         for stockID in listKOSDAQ:
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoTickerKOSDAQ[stockID] = stock.get_market_fundamental(
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_fundamental(
                         self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         self.setTimeFormat(datetime.today(), haveSeparator=False),
                         stockID, freq="d")
 
-                    if not self.infoTickerKOSDAQ[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoTickerKOSDAQ[stockID] = tmpData
                         break
-                else:
-                    logger.critical(f"GetStockInfo - getTickerKOSDAQ; Empty Dataframe, ticker : {stockID}")
-
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getTickerKOSDAQ; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getTickerKOSDAQ; getTicker Total data length : {len(self.infoTickerKOSDAQ)}")
 
 
     def getBasicKOSPI(self, listKOSPI: list):
         logger.info("GetStockInfo - getBasicKOSPI")
         for stockID in listKOSPI:
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoBasicKOSPI[stockID] = stock.get_market_ohlcv_by_date(
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_ohlcv_by_date(
                         fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
                         ticker=stockID,
                         name_display=False
                     )
 
-                    if not self.infoBasicKOSPI[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoBasicKOSPI[stockID] = tmpData
                         break
-                else:
-                    logger.critical(f"GetStockInfo - getBasicKOSPI; Empty Dataframe, ticker : {stockID}")
 
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getBasicKOSPI; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getBasicKOSPI; getBasic Total data length : {len(self.infoBasicKOSPI)}")
+
 
 
     def getTickerKOSPI(self, listKOSPI: list):
         logger.info("GetStockInfo - getTickerKOSPI")
         for stockID in listKOSPI:
-            try:
-                for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
-                    self.infoTickerKOSPI[stockID] = stock.get_market_fundamental(
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    tmpData = stock.get_market_fundamental(
                         self.setTimeFormat(self.createStartDate(), haveSeparator=False),
                         self.setTimeFormat(datetime.today(), haveSeparator=False),
                         stockID, freq="d",
                     )
-                    if not self.infoTickerKOSPI[stockID].empty:
+                    if not tmpData.empty:
+                        self.infoTickerKOSPI[stockID] = tmpData
                         break
-                else:
-                    logger.critical(f"GetStockInfo - getTickerKOSPI; Empty Dataframe, ticker : {stockID}")
 
-            except:
-                pass
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getTickerKOSPI; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getTickerKOSPI; getTicker Total data length : {len(self.infoTickerKOSPI)}")
 
 
     def createStartDate(self, normDate=datetime.today()):
@@ -595,16 +675,21 @@ class GetStockInfo:
 
 
 def FinaceInformation(market=None, timeoutSeconds=2):
+    """
+    Dropbox 이용하여 해결, 마지막 dl=1 붙여 강제 다운로드 값 주기
+    """
     sector_KS = \
         pd.read_csv(
-            'https://cvws.icloud-content.com/B/ASF24cjQqIR0KyVIGry56S5_GB6MAbxNEhta_QNcbv6luE0fIjPwdy2y/dataKOSPI.csv?o=AlYAk0iVT88Ua-bdkG3Bl_ZR7u_mQHrZb5nOcN-kJnlK&v=1&x=3&a=CAogCEH_5EYcP32-M2TATrxd6n9Q7ZxBmpES_W_Pprac48sSbxD7lqKD3y8Y-_P9hN8vIgEAUgR_GB6MWgTwdy2yaifSUJ4D9XBO3fYi9vZcLsMUIdKpoB19BlhlIoxdDP3V-TxGhGisG5hyJ9uERJQiWa48Jz5lhQeSN6H_CnElSqrkYZF4v1hLIzyFTYN2VQm2ow&e=1640419523&fl=&r=a9d3000e-97f8-4ce9-8cc4-c1cd6470fa6b-1&k=tVKfNDdJS8GVAvjrVt5bUA&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=38&s=iWWJrcSt0HEOYl1Vkd8wEH5NlaE&%20=7ff41143-9c9e-44ac-8085-de4dda51c79c',
+            #'https://cvws.icloud-content.com/B/ASF24cjQqIR0KyVIGry56S5_GB6MASuBhHf2pM2dhZU6KifcuIBRTbyt/dataKOSPI.csv?o=ApbjL8zgqtVjZ_Vnr6JnE7iMQ9WZ8xg0gt0eYzRtlYpF&v=1&x=3&a=CAogH_oag-4nGVKDlEYCLcVy8AYmh6dnU-5M1TOpvbWSW9YSbxDgmfCt3y8Y4PbLr98vIgEAUgR_GB6MWgRRTbytaidmOfB-a1PXJcuofAO_LGsiyPr0h9e6xf5GDUNc_sf0pGvF1_fgsqJyJ4qL4agFzKiAfKqF2EcW-ly9ZcTF6mhGh6eiN6k_WQZCr0kc_P8A-g&e=1640508881&fl=&r=d370657d-df13-446a-8b32-210cee0f2123-1&k=fEMp0tm8XTL9SfcfkEGjlw&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=38&s=r7MYuZgGUGIVrh5XiNzO8LAHdVs&%20=8c007e5e-4e93-4228-a8d4-7136bf84e99a',
+            'https://www.dropbox.com/s/74pm86ir7xexlsu/dataKOSPI.csv?dl=1',
             encoding='EUC-KR',
             error_bad_lines=False
         )
 
     sector_KQ = \
         pd.read_csv(
-            'https://cvws.icloud-content.com/B/AVy50wk61JGh1RoSuSKQ3qsPcH0gAXH_F1BD6bgRzNYsuCZ1SwoKIvBc/dataKOSDAQ.csv?o=AtCrkQMNLifbvCV-wuMoL_ejVHqBTt2VTp6_F2jfAfGD&v=1&x=3&a=CAogH84L_jblkrAeTntjvzBV2Br1zAAov98RMVNf4YSkPlASbxDf8Y6D3y8Y387qhN8vIgEAUgQPcH0gWgQKIvBcaif9I1OjEOnF9LhTH6sypgDuW2Y5HDyD8dY8w5m22Wqj-7vaLxZ826VyJ7suwtDXy-JqjTFrBDjIZjSVsYqpP_I-ottVTN2ubkIJH8Yquv4tfQ&e=1640419207&fl=&r=420bcc1b-a6b7-47e1-8657-b1fb55d106b7-1&k=6kuv4R9Q1txo-Zi5maGCKQ&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=38&s=PCfLskI7x0NRpgEumzPsloP9RAc&%20=4b92ab6a-743e-4b4b-aa74-fd70fe70506c',
+            #'https://cvws.icloud-content.com/B/AVy50wk61JGh1RoSuSKQ3qsPcH0gAQlcesOBnd5Nlqz1GLD5MO-NQgNh/dataKOSDAQ.csv?o=Aqq6TDrBDXo0y0mFKv42XK9f7ON9DWjVBPuuOF6xJ40g&v=1&x=3&a=CAogW8MNWcEf5z1QJMKkQP1_b9hJCmvsJu-eVsGIz0LhWRkSbxC42vOt3y8YuLfPr98vIgEAUgQPcH0gWgSNQgNhaieuypEwCop_E3Qp_YkhoiwkZvECwM9-hNttMRldpo76v8pFeIUxLEtyJzqGd-F-ES_K4Q4Lt7TtQgJ3ByS4ku9NfAj8AQAQbP48puhnM6d71g&e=1640508939&fl=&r=a9b696e6-1c2f-4887-a5d5-f9605ef61e9a-1&k=1Cwpy-cjna_CaQ0XdK3KVQ&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=38&s=6nZcFR8bxNWOEcVjErqbSbAgVyI&%20=0f1848a0-6188-4d15-8a03-f767d2fce49d',
+            'https://www.dropbox.com/s/fsld76e20523yjo/dataKOSDAQ.csv?dl=1',
             encoding='EUC-KR',
             error_bad_lines=False
         )
