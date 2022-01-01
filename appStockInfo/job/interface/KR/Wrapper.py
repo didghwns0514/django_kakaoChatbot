@@ -411,7 +411,7 @@ class MainWrapperKR:
                     )
             except Exception as e:
                 logger.critical(f"MainWrapperKR - StockItem error : {e}")
-                traceback.print_exc()
+                #traceback.print_exc()
                 filter_2.append(tick)
 
         # update Non information available Object
