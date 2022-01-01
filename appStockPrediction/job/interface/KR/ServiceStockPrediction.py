@@ -106,7 +106,6 @@ class MainWrapperKR:
         except: latestDate = datetime.datetime.now()
 
 
-
         return PX_indexTick, CF.getNextPredictionDate(latestDate)
 
     def createPredictionPrep(self) -> [pd.DataFrame, pd.DataFrame]:
