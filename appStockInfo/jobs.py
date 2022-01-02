@@ -1,6 +1,9 @@
 from appStockInfo.job.interface.KR.Wrapper import (
 	MainWrapperKR
 )
+from appStockPrediction.job.interface.KR.ServiceStockPrediction import (
+	MainWrapperKR as MWK_Prediction
+)
 import logging
 logger = logging.getLogger('my')
 
@@ -10,6 +13,10 @@ def serviceKRStocks():
 
 	mainKRWrapper = MainWrapperKR()
 	mainKRWrapper.doAction()
+
+
+	mainKRWrapper_prediction = MWK_Prediction()
+	mainKRWrapper_prediction.doAction()
 
 
 def serviceUSStocks():
