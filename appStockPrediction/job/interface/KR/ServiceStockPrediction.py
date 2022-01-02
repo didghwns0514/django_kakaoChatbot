@@ -3,7 +3,11 @@ import traceback
 from django.db.models.query import QuerySet, Q, F
 from appStockInfo.models import (
     StockItem,
-    StockTick
+    StockTick,
+    StockItemListName
+)
+from appStockPrediction.models import (
+    StockPredictionHistory
 )
 
 import ConfigFile as CONF
@@ -15,11 +19,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import explained_variance_score
 
 import datetime
-from pytimekr import pytimekr
 import pandas as pd
 
 import logging
 logger = logging.getLogger('appStockPrediction')
+
 
 class MainWrapperKR:
 
@@ -27,12 +31,59 @@ class MainWrapperKR:
     def __init__(self):pass
 
     def doAction(self):
-        pass
+
+        self.createStockPredictionHistory()
+
+
+    def createStockPredictionHistory(self):
+        """
+        StockPrediction CRUD
+        """
+        logger.info("MainWrapperKR - createStockPredictionHistory")
+
+        predictionDF, predictionDay = self.createPrediction()
+        tmpPredictionDayFilter = StockPredictionHistory.objects.all()
+        filter_1 = []
+
+        for idx, row in predictionDF.iterrows():
+            try:
+                tmpTick = row['tick']
+                tmpPrediction = row['prediction']
+                tmpClose = row['close']
+
+                # for CRUD
+                if not tmpPredictionDayFilter.filter(
+                      Q(prediction_time=predictionDay)
+                    & Q(stock_tick=tmpTick)
+                ).exists():
+
+                    tmp_StockName = StockItemListName.objects.get(
+                        stock_tick__stock_tick=tmpTick
+                    )
+
+                    filter_1.append(
+                        StockPredictionHistory(
+                            stock_tick=tmpTick,
+                            prediction_time=predictionDay,
+                            prediction_percent=(tmpPrediction - tmpClose) / tmpClose,
+                            value=tmpPrediction
+                        )
+                    )
+            except Exception as e:
+                logger.info(f"MainWrapperKR - createStockPredictionHistory; Error happened : {e}")
+
+        # Bulk create
+        StockPredictionHistory.objects.bulk_create(
+            filter_1
+        )
+
+        logger.info(f"MainWrapperKR - createStockPredictionHistory; Total new objects : {len(filter_1)}")
+
 
 
     def createPrediction(self) -> [pd.DataFrame, datetime.datetime]:
         """
-        train XGBoost and CRUD
+        train XGBoost and return Result
         참조 : https://riverzayden.tistory.com/17
 
         > Main Dataframe columns
@@ -54,17 +105,9 @@ class MainWrapperKR:
 
         # from Main Dataframe
         X, Y = tmpMainDF.loc[:, :'roe'], tmpMainDF.loc[:, 'answer':'answer']
-        print(f'X.info() : ')
-        X.info()
-        print(f'Y.info() : ')
-        Y.info()
 
         # from Prediction Dataframe -> "answer" column is not present here
         PX, PX_indexTick = tmpPredDF.loc[:, :'roe'], tmpPredDF.loc[:, 'tick':]
-        print(f'PX.info() : ')
-        PX.info()
-        print(f'PX_indexTick.info() : ')
-        PX_indexTick.info()
 
         X_train, X_test, y_train, y_test =  train_test_split(X, Y, test_size=0.1)
         xgb_model = xgboost.XGBRegressor(n_estimators=100,
@@ -81,25 +124,24 @@ class MainWrapperKR:
 
         # Prediction for test
         test_predictions = xgb_model.predict(X_test)
+
         # Score
         r_sq = xgb_model.score(X_train, y_train)
-        print(r_sq)
-        print(explained_variance_score(test_predictions, y_test))
 
         # Prediction for real
         real_predictions = xgb_model.predict(PX)
 
-        print(f'real_predictions : \n{real_predictions}')
-        print(f'type(real_predictions) : {type(real_predictions)}')
-        print(f'type(PY) : {type(PX_indexTick)}')
-
-        PX_indexTick['prediction'] = real_predictions
+        PX_indexTick['prediction'] = real_predictions.tolist()
+        PX_indexTick['close'] = PX['close']
 
         # get Date
         try:
-            tmplatestDate = StockItem.objects.filter(
+            tmplatest = StockItem.objects.filter(
                 Q(stock_name__stock_tick__stock_isInfoAvailable=True)
-            ).order_by('-reg_date').first().reg_date
+            ).order_by('-reg_date').first()
+
+            tmplatestDate = tmplatest.reg_date
+
             latestDate = datetime.datetime(tmplatestDate.year,
                                            tmplatestDate.month,
                                            tmplatestDate.day, hour=CONF.MARKET_TOTAL_FINISH_HOUR)
@@ -108,11 +150,14 @@ class MainWrapperKR:
 
         return PX_indexTick, CF.getNextPredictionDate(latestDate)
 
+
     def createPredictionPrep(self) -> [pd.DataFrame, pd.DataFrame]:
         """
         create Dataframe and returns total stock dataframe
         for XGBoost prediction
         """
+        logger.info("MainWrapperKR - createPredictionPrep")
+
         # global dataframe
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
@@ -128,7 +173,9 @@ class MainWrapperKR:
         )
 
         for tick in exist_stocktick:
-            tmpMain, tmpPrediction = self.createDataframe(tick, all_Stockitems=all_Stockitems, callDate=globalDate)
+            tmpMain, tmpPrediction = self.createDataframe(tick,
+                                                          all_Stockitems=all_Stockitems,
+                                                          callDate=globalDate)
             globalDataframeMain = pd.concat([
                 globalDataframeMain, tmpMain
             ])
@@ -142,6 +189,8 @@ class MainWrapperKR:
     def createDataframe(self, tick,
                         all_Stockitems:QuerySet,
                         callDate:datetime.datetime) -> [pd.DataFrame, pd.DataFrame]:
+
+        logger.info("MainWrapperKR - createDataframe")
 
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")

@@ -59,13 +59,93 @@ class CreateKRStocks(TestCase):
         self.assertEquals(tmpDummy.stock_isInfoAvailable,False)
 
 
-    def test_createStockItemListName(self):
+    def test_createStockItemListNameUpdateCheck(self):
         import pickle, os
         import copy
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
         #  /Users/yanghojun/Library/Mobile Documents/com~apple~CloudDocs/Code_mac/vscode/app_StockManager/django_kakaoChatbot/appStockInfo
+        mainWrapper = MainWrapperKR()
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockList.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockList = copy.deepcopy(pickle.load(f))
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockInfo.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
+
+        # Requirements
+        # Test Model
+        ## Add dummys in KOSPI
+        dummy1_tick = "000000"  # Added from StockTick
+        dummy1_name = "000000"
+        dummy2_tick = "000001"  # Not included in StockTick
+        dummy2_name = "테스트1"
+        nameSpace = {
+            dummy1_tick: dummy1_name,
+            dummy2_tick: dummy2_name
+        }
+
+        # First Creation
+        tmp_StockList = copy.deepcopy(mainWrapper.stockList.KOSPI)
+
+        # Update records in Main Memory
+        tmp_StockList.extend([dummy1_tick, dummy2_tick])
+        mainWrapper.stockList.tickerToName.update(nameSpace)
+
+        mainWrapper.createStockItemListName(
+            tmp_StockList
+        )
+
+        # check
+        readDummy1 = StockItemListName.objects.get(stock_tick=dummy1_tick)
+        readDummy2 = StockItemListName.objects.get(stock_tick=dummy2_tick)
+
+        # assertions
+        self.assertEqual(str(readDummy1.stock_name), dummy1_tick)
+        self.assertEqual(str(readDummy1.stock_tick), dummy1_tick)
+        self.assertEqual(str(readDummy2.stock_name), dummy2_name)
+        self.assertEqual(str(readDummy2.stock_tick), dummy2_tick)
+
+
+        # Second Update
+        # tmp_StockList = copy.deepcopy(mainWrapper.stockList.KOSPI)
+        dummy1_name = "업데이트1"
+        nameSpace[dummy1_tick] = dummy1_name
+        mainWrapper.stockList.tickerToName.update(nameSpace)
+
+        # Update
+        mainWrapper.createStockItemListName(
+            tmp_StockList
+        )
+
+        # check
+        readDummy1 = StockItemListName.objects.get(stock_tick=dummy1_tick)
+        readDummy2 = StockItemListName.objects.get(stock_tick=dummy2_tick)
+
+        # assertions
+        self.assertEqual(str(readDummy1.stock_name), dummy1_name)
+        self.assertEqual(str(readDummy1.stock_tick), dummy1_tick)
+        self.assertEqual(str(readDummy2.stock_name), dummy2_name)
+        self.assertEqual(str(readDummy2.stock_tick), dummy2_tick)
+
+
+    def test_createStockItemListName(self):
+        import pickle, os
+        import copy
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parent.parent
         mainWrapper = MainWrapperKR()
 
         with open(

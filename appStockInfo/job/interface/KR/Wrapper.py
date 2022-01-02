@@ -1,7 +1,7 @@
 import traceback
 
 from django.db.models import Q, F
-from django.utils import timezone
+from bulk_update.helper import bulk_update
 from appStockInfo.models import (
     StockTick,
     StockItemListName,
@@ -162,14 +162,16 @@ class MainWrapperKR:
                 pass
 
         if exist_needsupdate_stocktick.exists():
+            #print(f'len of exists of needsupdate : {len(exist_needsupdate_stocktick)}')
             for stock_item in exist_needsupdate_stocktick:
-                if str(stock_item.stock_tick) not in self.stockList.tickerToName:
+                if str(stock_item.stock_tick.stock_tick) not in self.stockList.tickerToName:
                     continue
                 else:
-                    stock_item.stock_name = self.stockList.tickerToName[str(stock_item.stock_tick)]
+                    stock_item.stock_name = self.stockList.tickerToName[str(stock_item.stock_tick.stock_tick)]
             # update
-            StockItemListName.objects.bulk_update(exist_needsupdate_stocktick,
-                                                  fields=['stock_name'])
+            # StockItemListName.objects.bulk_update(exist_needsupdate_stocktick,
+            #                                       update_fields=['stock_name'])
+            bulk_update(exist_needsupdate_stocktick)
 
         # create
         StockTick.objects.bulk_create(filter_1)
