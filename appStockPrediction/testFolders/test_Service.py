@@ -34,6 +34,15 @@ class CommonFunction(TestCase):
 
 class MainWrapper(TestCase):
 
+    def test_createStockPredictionHistory(self):
+        # Required
+        self.base()
+
+        # Test
+        mainWrapperKR = MainWrapperKR()
+        mainWrapperKR.createStockPredictionHistory()
+
+
     def test_createPrediction(self):
 
         # Required
@@ -170,6 +179,61 @@ class MainWrapper(TestCase):
         )
         self.mainWrapper.createStockItemListName(
             self.mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
+        self.mainWrapper.createStockSection()
+        self.mainWrapper.createStockItemListSection()
+
+        # run tests
+        self.mainWrapper.createStockItem()
+
+        tickSamsung = "005930"
+        sectionSamsung = "전기전자"
+
+        # light check
+        self.assertEquals(
+            StockItem.objects.filter(
+                stock_name__stock_tick__stock_tick=tickSamsung
+            ).exists(), True
+        )
+
+    def base_short(self):
+        """
+        for base needed for appStockPrediction
+        """
+        import pickle, os
+        import copy
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parent.parent.parent
+        #  /Users/yanghojun/Library/Mobile Documents/com~apple~CloudDocs/Code_mac/vscode/app_StockManager/django_kakaoChatbot/appStockInfo
+        self.mainWrapper = MKR()
+
+        with open(
+                os.path.join(
+                    root,
+                    'appStockInfo',
+                    'testMockData', 'stockList.p'
+                ), 'rb'
+        ) as f:
+            self.mainWrapper.stockList = copy.deepcopy(pickle.load(f))
+
+        with open(
+                os.path.join(
+                    root,
+                    'appStockInfo',
+                    'testMockData', 'stockInfo.p'
+                ), 'rb'
+        ) as f:
+            self.mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
+
+
+        # Test
+        # Required
+        self.mainWrapper.createStockTick(
+            self.mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        self.mainWrapper.createStockItemListName(
+            self.mainWrapper.stockList.KOSPI, "KOSPI"
         )
         self.mainWrapper.createStockSection()
         self.mainWrapper.createStockItemListSection()

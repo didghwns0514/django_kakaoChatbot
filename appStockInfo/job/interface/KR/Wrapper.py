@@ -122,7 +122,7 @@ class MainWrapperKR:
         logger.info("MainWrapperKR - createStockItemListName")
 
         query_set = StockItemListName.objects.all()
-        exsist_stocktick = query_set.values_list('stock_tick', flat=True)
+        exsist_stocktick = query_set.values_list('stock_tick__stock_tick', flat=True)
         exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="^[a-zA-Z0-9]*$")
         create_new_stocktick = set(listStocks) - set(exsist_stocktick)
 
@@ -229,21 +229,21 @@ class MainWrapperKR:
         tmpStockSectionDF = self.stockInfo.infoFinanceData
 
         # 없는 종목 (추가해야하는지 확인)
-        tmp_exist_stockitem = StockItemListSection.objects.all().values_list('stock_tick', flat=True)
+        tmp_exist_stockitem = StockItemListSection.objects.all().values_list('stock_tick__stock_tick', flat=True)
         tmp_new_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
         #self.stockList.KOSPI + self.stockList.KOSDAQ
         tmp_new_stocksets = set(set(tmp_new_stockticks) - set(tmp_exist_stockitem))
+
         if tmp_new_stocksets:
             logger.critical("MainWrapperKR - createStockItemListSection; Update CSV")
             logger.critical(f"MainWrapperKR - createStockItemListSection; Missing information  : \n{tmp_new_stocksets}")
 
         if isinstance(tmpStockSectionDF, pd.DataFrame) and '업종명' in tmpStockSectionDF:  # is a dataframe
             filter_1 = []
-            exist_stockitem = StockItemListSection.objects.all().values_list('stock_tick')
             tmpStockTickCol = tmpStockSectionDF['종목코드'].tolist()
 
             create_new_stocklistsection = \
-                set(tmpStockTickCol) - set(exist_stockitem)
+                set(tmpStockTickCol) - set(tmp_exist_stockitem)
 
             for tick in create_new_stocklistsection:
                 try:
@@ -349,6 +349,11 @@ class MainWrapperKR:
                 fill_missing_nan = {
                     'ROE': 0,
                     '거래량': 0,
+                    '시가': concatDF['종가'].bfill(),
+                    '고가': concatDF['종가'].bfill(),
+                    '저가': concatDF['종가'].bfill(),
+                    '종가': concatDF['종가'].bfill(),
+
                     'BPS': concatDF['BPS'].bfill(),
                     'PER': concatDF['PER'].bfill(),
                     'PBR': concatDF['PBR'].bfill(),
@@ -356,6 +361,12 @@ class MainWrapperKR:
                     'DIV': concatDF['DIV'].bfill()
                 }
                 concatDF.fillna(fill_missing_nan, inplace=True)  # removal inplace
+
+                # if missing Nan still exists
+                if concatDF.isnull().values.any() :
+                    filter_2.append(tick)
+                    continue
+
 
                 # Foreign Key
                 tmpStockListSection = StockItemListSection.objects.get(
@@ -370,17 +381,16 @@ class MainWrapperKR:
                 stockItemsQuery = query_stockitems.filter(
                          Q(stock_name__stock_tick__stock_tick=tick)
                     ).order_by('-reg_date')
+
                 if stockItemsQuery.exists():
-                    # print(f'len(stockItemsQuery) : {len(stockItemsQuery)}')
+
                     latestDate = stockItemsQuery.first().reg_date
                     oldestDate = stockItemsQuery.last().reg_date
-                    # print(f'latestDate : {latestDate}, oldestDate : {oldestDate}')
-                    # print(f'type(oldestDate) : {type(oldestDate)}')
-                    # print(f'before len(concatDF) : {len(concatDF)}')
+
                     concatDF = concatDF[
-                        (concatDF.index < oldestDate) | (concatDF.index > latestDate)
+                        (concatDF.index < str(oldestDate)) | (concatDF.index > str(latestDate))
                     ]
-                    # print(f'after len(concatDF) : {len(concatDF)}')
+
                     cntExisting -= len(concatDF)
 
                 # iteration
@@ -419,6 +429,7 @@ class MainWrapperKR:
         # update Non information available Object
         logger.info(f"MainWrapperKR - total info not available : {len(filter_2)}")
         logger.info(f"MainWrapperKR - excluded existing infos : {cntExisting}")
+
         # create
         StockItem.objects.bulk_create(filter_1)
 
@@ -427,8 +438,9 @@ class MainWrapperKR:
         if tmpQuerySet.exists():
             for stock_tick in tmpQuerySet:
                 stock_tick.stock_isInfoAvailable = False
-            StockTick.objects.bulk_update(tmpQuerySet,
-                                          fields=['stock_isInfoAvailable'])
+            # StockTick.objects.bulk_update(tmpQuerySet,
+            #                               fields=['stock_isInfoAvailable'])
+            bulk_update(tmpQuerySet)
 
 
     def updateStockLastUpdateTime(self, dateStamp):

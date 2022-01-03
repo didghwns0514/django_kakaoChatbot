@@ -341,6 +341,85 @@ class CreateKRStocks(TestCase):
             print(f'row : {row}')
 
 
+    def test_createStockItemUpdate(self):
+
+        import pickle, os
+        import copy
+        from pathlib import Path
+        import pandas as pd
+
+        root = Path(__file__).resolve().parent.parent
+        #  /Users/yanghojun/Library/Mobile Documents/com~apple~CloudDocs/Code_mac/vscode/app_StockManager/django_kakaoChatbot/appStockInfo
+        mainWrapper = MainWrapperKR()
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockList.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockList = copy.deepcopy(pickle.load(f))
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockInfo.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
+
+        # Check
+        tmpInfoTickerKOSPI = mainWrapper.stockInfo.infoTickerKOSPI.keys()
+        tmpInfoTickerKOSDAQ = mainWrapper.stockInfo.infoTickerKOSDAQ.keys()
+        tmpInfoBasicKOSPI = mainWrapper.stockInfo.infoBasicKOSPI.keys()
+        tmpInfoBasicKOSDAQ = mainWrapper.stockInfo.infoBasicKOSDAQ.keys()
+        # List
+        tmpTickerKOSPI = mainWrapper.stockList.KOSPI
+        tmpTickerKOSDAQ = mainWrapper.stockList.KOSDAQ
+
+        # Check - print
+        print(f'tmpInfoTickerKOSPI : {len(tmpInfoTickerKOSPI)}')
+        print(f'tmpInfoTickerKOSDAQ : {len(tmpInfoTickerKOSDAQ)}')
+        print(f'tmpInfoBasicKOSPI : {len(tmpInfoBasicKOSPI)}')
+        print(f'tmpInfoBasicKOSDAQ : {len(tmpInfoBasicKOSDAQ)}')
+        print(f'tmpTickerKOSPI : {len(tmpTickerKOSPI)}')
+        print(f'tmpTickerKOSDAQ : {len(tmpTickerKOSDAQ)}')
+        # Check - partial
+        CheckTick ="950210"
+        print(f'in tmpInfoTickerKOSPI ? : {CheckTick in tmpInfoTickerKOSPI }')
+        print(f'in tmpInfoTickerKOSDAQ ? : {CheckTick in tmpInfoTickerKOSDAQ }')
+        print(f'in tmpInfoBasicKOSPI ? : {CheckTick in tmpInfoBasicKOSPI }')
+        print(f'in tmpInfoBasicKOSDAQ ? : {CheckTick in tmpInfoBasicKOSDAQ }')
+        print(f'in tmpTickerKOSPI ? : {CheckTick in tmpTickerKOSPI }')
+        print(f'in tmpTickerKOSDAQ ? : {CheckTick in tmpTickerKOSDAQ }')
+
+
+        # Test
+        # Required
+        #mainWrapper.getLoggerForAllInfos()
+
+        mainWrapper.createStockTick(
+            mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        mainWrapper.createStockTick(
+            mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
+        mainWrapper.createStockItemListName(
+            mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        mainWrapper.createStockItemListName(
+            mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
+        mainWrapper.createStockSection()
+        mainWrapper.createStockItemListSection()
+
+        # run tests
+        mainWrapper.createStockItem()
+
+        # check second run
+        mainWrapper.createStockItem()
+
+
     def test_createStockItem(self):
 
         import pickle, os

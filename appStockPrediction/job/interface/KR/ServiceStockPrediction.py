@@ -57,13 +57,13 @@ class MainWrapperKR:
                     & Q(stock_tick=tmpTick)
                 ).exists():
 
-                    tmp_StockName = StockItemListName.objects.get(
-                        stock_tick__stock_tick=tmpTick
+                    tmp_StockTick = StockTick.objects.get(
+                        stock_tick=tmpTick
                     )
 
                     filter_1.append(
                         StockPredictionHistory(
-                            stock_tick=tmpTick,
+                            stock_tick=tmp_StockTick,
                             prediction_time=predictionDay,
                             prediction_percent=(tmpPrediction - tmpClose) / tmpClose,
                             value=tmpPrediction
@@ -71,6 +71,7 @@ class MainWrapperKR:
                     )
             except Exception as e:
                 logger.info(f"MainWrapperKR - createStockPredictionHistory; Error happened : {e}")
+                traceback.print_exc()
 
         # Bulk create
         StockPredictionHistory.objects.bulk_create(
@@ -103,6 +104,13 @@ class MainWrapperKR:
         tmpPredDF['total_sum']       = pd.to_numeric(tmpPredDF['total_sum'], errors='coerce')
         tmpPredDF['time_elapsed']    = pd.to_numeric(tmpPredDF['time_elapsed'], errors='coerce')
 
+        print(f'tmpMainDF')
+        tmpMainDF.info()
+        tmpMainDF.head(3)
+        print(f'tmpPredDF')
+        tmpPredDF.info()
+        tmpPredDF.head(3)
+
         # from Main Dataframe
         X, Y = tmpMainDF.loc[:, :'roe'], tmpMainDF.loc[:, 'answer':'answer']
 
@@ -120,7 +128,9 @@ class MainWrapperKR:
         xgb_model.fit(X_train, y_train)
 
         # Plot importance
-        xgboost.plot_importance(xgb_model)
+        # UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
+        # terminating with uncaught exception of type NSException
+        #xgboost.plot_importance(xgb_model)
 
         # Prediction for test
         test_predictions = xgb_model.predict(X_test)
@@ -172,10 +182,11 @@ class MainWrapperKR:
             stock_isInfoAvailable=True
         )
 
-        for tick in exist_stocktick:
+        for idx, tick in enumerate(exist_stocktick):
             tmpMain, tmpPrediction = self.createDataframe(tick,
                                                           all_Stockitems=all_Stockitems,
-                                                          callDate=globalDate)
+                                                          callDate=globalDate,
+                                                          countIndex=idx)
             globalDataframeMain = pd.concat([
                 globalDataframeMain, tmpMain
             ])
@@ -188,9 +199,11 @@ class MainWrapperKR:
 
     def createDataframe(self, tick,
                         all_Stockitems:QuerySet,
-                        callDate:datetime.datetime) -> [pd.DataFrame, pd.DataFrame]:
+                        callDate:datetime.datetime,
+                        countIndex=0) -> [pd.DataFrame, pd.DataFrame]:
 
-        logger.info("MainWrapperKR - createDataframe")
+        if countIndex % 100 == 0:
+            logger.info(f"MainWrapperKR - createDataframe : {countIndex}")
 
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
@@ -203,10 +216,9 @@ class MainWrapperKR:
         try:
             tmpQuery = all_Stockitems.filter(
                 Q(stock_name__stock_tick__stock_tick=tick)
-              & Q(reg_date__range=(startDate, endDate) # get only needed dates
-            )
-
+              & Q(reg_date__range=(startDate, endDate)) # get only needed dates
             ).order_by('-reg_date')
+
             if not tmpQuery.exists():
                 raise Exception(f"Empty Database for tick : {tick}")
 
