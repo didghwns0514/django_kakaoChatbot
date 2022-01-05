@@ -25,9 +25,22 @@ DATAFRAME_COLUMN_NAMES = [
         "per",
         "pbr",
         "roe",
+        "market_name",
         "answer",
         "tick"
 ]
+
+
+MARKET_NUMBER = {
+        "Dummy" : 0,
+        "KOSPI" : 1,
+        "KOSDAQ" : 2
+}
+
+## Moeny
+KR_BOTTOMLINE = 5000
+
+
 
 # KRX configs
 KRX__GEN_OPT_URL = 'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'

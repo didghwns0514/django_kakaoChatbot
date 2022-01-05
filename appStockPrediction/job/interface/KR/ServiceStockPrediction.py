@@ -1,6 +1,7 @@
 import traceback
 
 from django.db.models.query import QuerySet, Q, F
+from bulk_update.helper import bulk_update
 from appStockInfo.models import (
     StockItem,
     StockTick,
@@ -36,8 +37,21 @@ class MainWrapperKR:
     def __init__(self):pass
 
     def doAction(self):
-
+        logger.info("MainWrapperKR - doAction")
+        self.deleteStockPredictionHistory(datetime.datetime.now())
         self.createStockPredictionHistory(datetime.datetime.now())
+
+
+    def deleteStockPredictionHistory(self, callDate:datetime.datetime):
+        logger.info("MainWrapperKR - deleteStockPredictionHistory")
+
+        # 모든것을 지움 -> 일자 지난 것에 대해서
+        time_End = callDate
+        time_Start = CF.getNextPredictionDate(
+            time_End - datetime.timedelta(days=CONF.MAX_DAYS_KEEP_OLD_STOCKITEMS)
+        )
+
+        StockPredictionHistory.objects.filter(~Q(prediction_time__range=(time_Start, time_End))).delete()
 
 
     def createStockPredictionHistory(self, callDate:datetime.datetime):
@@ -47,9 +61,18 @@ class MainWrapperKR:
         logger.info("MainWrapperKR - createStockPredictionHistory")
 
         predictionDF, predictionDay = self.createPrediction(callDate=callDate)
-        tmpPredictionDayFilter = StockPredictionHistory.objects.all()
-        filter_1 = []
 
+        filter_1 = []
+        filter_2 = []
+
+        # Delete unmade prediction stockticks
+        predictionStockTicksList = predictionDF["tick"].tolist()
+        StockPredictionHistory.objects.filter(
+            ~Q(stock_tick__stock_tick__in=predictionStockTicksList)
+        ).delete()
+        logger.info(f"MainWrapperKR - createStockPredictionHistory; Deleted unwanted prediction history")
+
+        tmpPredictionDayFilter = StockPredictionHistory.objects.all()
         for idx, row in predictionDF.iterrows():
             try:
                 tmpTick = row['tick']
@@ -57,6 +80,7 @@ class MainWrapperKR:
                 tmpClose = row['close']
 
                 # for CRUD
+                # Not existing
                 if not tmpPredictionDayFilter.filter(
                       Q(prediction_time=predictionDay)
                     & Q(stock_tick=tmpTick)
@@ -76,9 +100,19 @@ class MainWrapperKR:
                             stock_tick=tmp_StockTick,
                             prediction_time=predictionDay,
                             prediction_percent=((tmpPrediction - tmpClose) / tmpClose) * 100,
-                            value=tmpPrediction
+                            value=tmpPrediction,
+                            initial_close=tmpClose
                         )
                     )
+                else: # existing
+                    tmp_StockPredictionHistory = tmpPredictionDayFilter.get(
+                        stock_tick__stock_tick=tmpTick
+                    )
+                    # update
+                    filter_2.append(tmpTick)
+                    tmp_StockPredictionHistory.value = tmpPrediction
+                    tmp_StockPredictionHistory.prediction_percent = ((tmpPrediction - tmpClose) / tmpClose) * 100
+
             except Exception as e:
                 logger.info(f"MainWrapperKR - createStockPredictionHistory; Error happened : {e}")
                 traceback.print_exc()
@@ -88,8 +122,11 @@ class MainWrapperKR:
             filter_1
         )
 
-        logger.info(f"MainWrapperKR - createStockPredictionHistory; Total new objects : {len(filter_1)}")
+        # Bulk update
+        bulk_update(tmpPredictionDayFilter)
 
+        logger.info(f"MainWrapperKR - createStockPredictionHistory; Total new objects : {len(filter_1)}")
+        logger.info(f"MainWrapperKR - createStockPredictionHistory; Total updated objects : {len(filter_2)}")
 
 
     def createPrediction(self,
@@ -244,26 +281,42 @@ class MainWrapperKR:
                         callDate:datetime.datetime,
                         countIndex=0) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
-        if countIndex % 100 == 0:
-            logger.info(f"MainWrapperKR - createDataframe : {countIndex}")
-
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
         globalDataframeWindow = CF.generateEmptyDataframe("Window")
 
-        startDate = CF.getNextPredictionDate(
-            callDate - datetime.timedelta(CONF.TOTAL_REQUEST_DATE_LENGTH)
-        )
+        # startDate = CF.getNextPredictionDate(
+        #     callDate - datetime.timedelta(CONF.TOTAL_REQUEST_DATE_LENGTH)
+        # )
+        startDate = CF.getStartFetchingDate(callEndDate=callDate)
         endDate = callDate
+
+        if countIndex % 100 == 0:
+            logger.info(f"MainWrapperKR - createDataframe : {countIndex}")
+            logger.info(f"MainWrapperKR - createDataframe; start:{startDate}, end:{endDate}")
 
         try:
             tmpQuery = all_Stockitems.filter(
                 Q(stock_name__stock_tick__stock_tick=tick)
               & Q(reg_date__range=(startDate, endDate)) # get only needed dates
+              & (
+                    ~(    # Remove unwanted (거래 중지)
+                          Q(open=0)
+                        | Q(high=0)
+                        | Q(low=0)
+                        | Q(close=0)
+                      )
+                 )
+              & (
+                    Q(close__gte=CONF.KR_BOTTOMLINE) # applies only for first object
+                )
             ).order_by('-reg_date')
 
             if not tmpQuery.exists():
-                raise Exception(f"Empty Database for tick : {tick}")
+                raise Exception(f"DB Empty for tick : {tick}")
+
+            if countIndex % 100 == 0:
+                logger.info(f"MainWrapperKR - createDataframe; Query return length check : {len(tmpQuery)}")
 
             previousAnswer = None
             for idx, stockitem in enumerate(tmpQuery):
@@ -282,6 +335,7 @@ class MainWrapperKR:
                     'per' : stockitem.per,
                     'pbr' : stockitem.pbr,
                     'roe' : stockitem.roe,
+                    'market_name' : CF.getMarketNumber(stockitem.stock_name.stock_tick.stock_marketName),
                     'tick' : str(tick)
                 }
                 if idx == 0:  # first index which needs predictions
@@ -308,10 +362,6 @@ class MainWrapperKR:
         finally:
             return globalDataframeMain, globalDataframePredictions, globalDataframeWindow
 
+
 def myMPE( y_pred, y_true):
     return np.mean((y_true - y_pred) / y_true) * 100
-
-# active information columns only selected
-# exist_stockitems = StockItem.objects.filter(
-#     stock_map_section__stock_tick__stock_isInfoAvailable=True
-# ).values_list(flat=True)

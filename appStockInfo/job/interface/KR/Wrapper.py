@@ -39,32 +39,33 @@ class MainWrapperKR:
         self.stockInfo = GetStockInfo()
 
 
-    def doAction(self):
+    def doAction(self, isDataFetchOn:bool=False):
         logger.info("MainWrapperKR - doAction")
 
         #self.clearConnections()
         #self.getLoggerForAllInfos()
 
-        self.stockList.doAction()
-        self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
+        if isDataFetchOn:
+            self.stockList.doAction()
+            self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
-        # CRUD
-        # 1) Create StockTick
-        self.createStockTick(self.stockList.KOSPI, "KOSPI")
-        self.createStockTick(self.stockList.KOSDAQ, "KOSDAQ")
+            # CRUD
+            # 1) Create StockTick
+            self.createStockTick(self.stockList.KOSPI, "KOSPI")
+            self.createStockTick(self.stockList.KOSDAQ, "KOSDAQ")
 
-        # 2) Create StockItemListName
-        self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
-        self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
+            # 2) Create StockItemListName
+            self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
+            self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
 
-        # 3) Create StockSection
-        self.createStockSection()
-        self.createStockItemListSection()
+            # 3) Create StockSection
+            self.createStockSection()
+            self.createStockItemListSection()
 
-        # 4-1) Delete StockItems
-        self.deleteStockItem(datetime.now())
-        # 4-2) Create StockItems
-        self.createStockItem()
+            # 4-1) Delete StockItems
+            self.deleteStockItem(datetime.now())
+            # 4-2) Create StockItems
+            self.createStockItem(datetime.now())
 
         # 5) Create DateStamp
         self.updateStockLastUpdateTime(dateStamp=datetime.now())
@@ -304,7 +305,7 @@ class MainWrapperKR:
         StockItem.objects.filter(~Q(reg_date__range=(time_Start, time_End))).delete()
 
 
-    def createStockItem(self):
+    def createStockItem(self, callDate:datetime):
         """
         create StockItem CRUD
         """
@@ -314,7 +315,6 @@ class MainWrapperKR:
         # 정보 lookup 세팅
         filter_1 = []
         filter_2 = []
-        cntExisting = 0
 
         # Data 축적
         # pull from Info
@@ -328,105 +328,127 @@ class MainWrapperKR:
 
         # total iteration
         #exist_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
-        query_stockticks = StockTick.objects.filter(stock_isInfoAvailable=True)
-        query_stockitems = StockItem.objects.filter(stock_name__stock_tick__stock_isInfoAvailable=True)
+        # query_stockticks = StockTick.objects.filter(stock_isInfoAvailable=True)
+        # query_stockitems = StockItem.objects.filter(stock_name__stock_tick__stock_isInfoAvailable=True)
+        query_stockticks = StockTick.objects.all()
+        query_stockitems = StockItem.objects.all()
         exist_stockticks = query_stockticks.values_list('stock_tick', flat=True)
-        cntExisting = len(query_stockitems)
-        for tick in exist_stockticks:
+
+        for tick in exist_stockticks: # 새로운 stock tick 포함 모든 stock tick
             try:
+                if tick in globalInfoBasic and tick in globalTickerBasic:
+                    selectedInfoBasic = globalInfoBasic[tick]
+                    selectedTickerBasic = globalTickerBasic[tick]
 
-                selectedInfoBasic = globalInfoBasic[tick]
-                selectedTickerBasic = globalTickerBasic[tick]
-
-                # Dataframe prep
-                concatDF = pd.concat(
-                    [
-                        selectedInfoBasic,
-                        selectedTickerBasic
-                    ], axis=1
-                )
-
-                # New column
-                concatDF['ROE'] = concatDF['EPS'] / concatDF['BPS'] * 100
-
-                # -> Nan value removal
-                # https://rfriend.tistory.com/542
-                # https://rfriend.tistory.com/262
-                fill_missing_nan = {
-                    'ROE': 0,
-                    '거래량': 0,
-                    '시가': concatDF['종가'].bfill(),
-                    '고가': concatDF['종가'].bfill(),
-                    '저가': concatDF['종가'].bfill(),
-                    '종가': concatDF['종가'].bfill(),
-
-                    'BPS': concatDF['BPS'].bfill(),
-                    'PER': concatDF['PER'].bfill(),
-                    'PBR': concatDF['PBR'].bfill(),
-                    'EPS': concatDF['EPS'].bfill(),
-                    'DIV': concatDF['DIV'].bfill()
-                }
-                concatDF.fillna(fill_missing_nan, inplace=True)  # removal inplace
-
-                # if missing Nan still exists
-                if concatDF.isnull().values.any() :
-                    filter_2.append(tick)
-                    continue
-
-
-                # Foreign Key
-                tmpStockListSection = StockItemListSection.objects.get(
-                    stock_tick=tick
-                )
-                tmpStockName = StockItemListName.objects.get(
-                    stock_tick=tick
-                )
-
-                # Check for existing records that doesn't need update
-                # filter tick's date onece more
-                stockItemsQuery = query_stockitems.filter(
-                         Q(stock_name__stock_tick__stock_tick=tick)
-                    ).order_by('-reg_date')
-
-                if stockItemsQuery.exists():
-
-                    latestDate = stockItemsQuery.first().reg_date
-                    oldestDate = stockItemsQuery.last().reg_date
-
-                    concatDF = concatDF[
-                        (concatDF.index < str(oldestDate)) | (concatDF.index > str(latestDate))
-                    ]
-
-                    cntExisting -= len(concatDF)
-
-                # iteration
-                for idx, row in concatDF.iterrows():
-                    reg_date = idx
-                    open = row["시가"]
-                    high = row["고가"]
-                    low = row["저가"]
-                    close = row["종가"]
-                    volume = row["거래량"]
-                    div = row["DIV"]
-                    per = row["PER"]
-                    pbr = row["PBR"]
-                    roe = row["ROE"]
-                    filter_1.append(
-                        StockItem(
-                            stock_name=tmpStockName,
-                            stock_map_section=tmpStockListSection,
-                            reg_date=reg_date,
-                            open=open,
-                            high=high,
-                            low=low,
-                            close=close,
-                            volume=volume,
-                            div=div,
-                            per=per,
-                            pbr=pbr,
-                            roe=roe
-                        )
+                    # Dataframe prep
+                    concatDF = pd.concat(
+                        [
+                            selectedInfoBasic,
+                            selectedTickerBasic
+                        ], axis=1
                     )
+
+                    # New column
+                    concatDF['ROE'] = concatDF['EPS'] / concatDF['BPS'] * 100
+
+                    # -> Nan value removal
+                    # https://rfriend.tistory.com/542
+                    # https://rfriend.tistory.com/262
+                    fill_missing_nan = {
+                        'ROE': 0,
+                        '거래량': 0,
+                        '시가': concatDF['종가'].bfill(),
+                        '고가': concatDF['종가'].bfill(),
+                        '저가': concatDF['종가'].bfill(),
+                        '종가': concatDF['종가'].bfill(),
+
+                        'BPS': concatDF['BPS'].bfill(),
+                        'PER': concatDF['PER'].bfill(),
+                        'PBR': concatDF['PBR'].bfill(),
+                        'EPS': concatDF['EPS'].bfill(),
+                        'DIV': concatDF['DIV'].bfill()
+                    }
+                    concatDF.fillna(fill_missing_nan, inplace=True)  # removal inplace
+
+                    # if missing Nan still exists
+                    if concatDF.isnull().values.any() :
+                        filter_2.append(tick)
+                        continue
+
+
+                    # Foreign Key
+                    tmpStockListSection = StockItemListSection.objects.get(
+                        stock_tick=tick
+                    )
+                    tmpStockName = StockItemListName.objects.get(
+                        stock_tick=tick
+                    )
+
+                    # Check for existing records that doesn't need update
+                    # filter tick's date onece more
+                    stockItemsQuery = query_stockitems.filter(
+                             Q(stock_name__stock_tick__stock_tick=tick)
+                        ).order_by('-reg_date')
+
+                    if stockItemsQuery.exists():
+
+                        latestDate = stockItemsQuery.first().reg_date
+                        oldestDate = stockItemsQuery.last().reg_date
+
+                        # Pick between range
+                        concatDF = concatDF[
+                            (concatDF.index < str(oldestDate)) | (concatDF.index > str(latestDate))
+                        ]
+
+
+                    # iteration
+                    for idx, row in concatDF.iterrows():
+                        reg_date = idx
+                        open = row["시가"]
+                        high = row["고가"]
+                        low = row["저가"]
+                        close = row["종가"]
+                        volume = row["거래량"]
+                        div = row["DIV"]
+                        per = row["PER"]
+                        pbr = row["PBR"]
+                        roe = row["ROE"]
+                        filter_1.append(
+                            StockItem(
+                                stock_name=tmpStockName,
+                                stock_map_section=tmpStockListSection,
+                                reg_date=reg_date,
+                                open=open,
+                                high=high,
+                                low=low,
+                                close=close,
+                                volume=volume,
+                                div=div,
+                                per=per,
+                                pbr=pbr,
+                                roe=roe
+                            )
+                        )
+
+                else:
+                    """
+                    if no dataframe is retrieved
+                    -> Check if data exists
+                    """
+                    startDate = CF.getStartFetchingDate(callEndDate=callDate)
+                    endDate = callDate
+                    stockItemsQuery = query_stockitems.filter(
+                             Q(stock_name__stock_tick__stock_tick=tick)
+                          &  Q(reg_date__range=(startDate, endDate))
+                        ).order_by('-reg_date')
+
+                    if stockItemsQuery.exists() and stockItemsQuery.count() >= CONF.TOTAL_REQUEST_DATE_LENGTH:
+                        # wanted data length already exists
+                        pass # skip
+                    else:
+                        logger.critical(f"MainWrapperKR - StockItem no DF and not enought data : {tick}")
+                        filter_2.append(tick)
+
             except Exception as e:
                 logger.critical(f"MainWrapperKR - StockItem error : {e}")
                 #traceback.print_exc()
@@ -434,7 +456,6 @@ class MainWrapperKR:
 
         # update Non information available Object
         logger.info(f"MainWrapperKR - total info not available : {len(filter_2)}")
-        logger.info(f"MainWrapperKR - excluded existing infos : {cntExisting}")
 
         # create
         StockItem.objects.bulk_create(filter_1)
@@ -599,7 +620,7 @@ class GetStockInfo:
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
                     tmpData = stock.get_market_ohlcv_by_date(
-                        fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                        fromdate=self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
                         todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
                         ticker=stockID,
                         name_display=False
@@ -623,7 +644,7 @@ class GetStockInfo:
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
                     tmpData = stock.get_market_fundamental(
-                        self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                        self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
                         self.setTimeFormat(datetime.today(), haveSeparator=False),
                         stockID, freq="d")
 
@@ -644,7 +665,7 @@ class GetStockInfo:
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
                     tmpData = stock.get_market_ohlcv_by_date(
-                        fromdate=self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                        fromdate=self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
                         todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
                         ticker=stockID,
                         name_display=False
@@ -669,7 +690,7 @@ class GetStockInfo:
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
                     tmpData = stock.get_market_fundamental(
-                        self.setTimeFormat(self.createStartDate(), haveSeparator=False),
+                        self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
                         self.setTimeFormat(datetime.today(), haveSeparator=False),
                         stockID, freq="d",
                     )

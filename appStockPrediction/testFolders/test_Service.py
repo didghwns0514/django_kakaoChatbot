@@ -168,6 +168,7 @@ class MainWrapper(TestCase):
             len(tmpWindowDF)
         )
 
+
     def test_createDataframe(self):
 
         # Required
@@ -266,8 +267,9 @@ class MainWrapper(TestCase):
         self.mainWrapper.createStockSection()
         self.mainWrapper.createStockItemListSection()
 
+        tmpDatetime = datetime.datetime(2021,12,27,18)
         # run tests
-        self.mainWrapper.createStockItem()
+        self.mainWrapper.createStockItem(tmpDatetime)
 
         tickSamsung = "005930"
         sectionSamsung = "전기전자"
@@ -321,8 +323,10 @@ class MainWrapper(TestCase):
         self.mainWrapper.createStockSection()
         self.mainWrapper.createStockItemListSection()
 
+        tmpDatetime = datetime.datetime(2021,12,27,18)
+
         # run tests
-        self.mainWrapper.createStockItem()
+        self.mainWrapper.createStockItem(tmpDatetime)
 
         tickSamsung = "005930"
         sectionSamsung = "전기전자"

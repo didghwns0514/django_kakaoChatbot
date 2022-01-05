@@ -480,11 +480,14 @@ class CreateKRStocks(TestCase):
         mainWrapper.createStockSection()
         mainWrapper.createStockItemListSection()
 
+        tmpDatetime = datetime.datetime(
+            2021,12,27, 18
+        )
         # run tests
-        mainWrapper.createStockItem()
+        mainWrapper.createStockItem(tmpDatetime)
 
         # check second run
-        mainWrapper.createStockItem()
+        mainWrapper.createStockItem(tmpDatetime)
 
 
     def test_createStockItem(self):
@@ -559,8 +562,10 @@ class CreateKRStocks(TestCase):
         mainWrapper.createStockSection()
         mainWrapper.createStockItemListSection()
 
+        tmpDatetime = datetime.datetime(2021,12,27,18)
+
         # run tests
-        mainWrapper.createStockItem()
+        mainWrapper.createStockItem(tmpDatetime)
 
         tickSamsung = "005930"
         sectionSamsung = "전기전자"

@@ -15,6 +15,7 @@ class StockPredictionHistory(models.Model):
                                    default="Dummy")
     prediction_time = models.DateTimeField(default=timezone.now, null=False)
     prediction_percent = models.FloatField(default=0, null=False)
+    initial_close = models.FloatField(default=0, null=False)
     value = models.FloatField(default=0, null=False)
 
     def __str__(self):
