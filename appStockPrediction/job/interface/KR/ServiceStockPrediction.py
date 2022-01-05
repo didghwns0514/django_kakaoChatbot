@@ -207,11 +207,6 @@ class MainWrapperKR:
         mpe = myMPE(test_predictions, y_test.to_numpy())
         logger.info(f"MainWrapperKR - createPrediction; Prediction score train/mpe : {mpe}")
 
-        ## print
-        print(f'test_score : {test_score}')
-        print(f'train_score : {train_score}')
-        print(f'mpe : {mpe}')
-
         # Prediction for real
         real_predictions = xgb_model.predict(PX)
 
