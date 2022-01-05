@@ -2,8 +2,8 @@ from datetime import datetime
 
 # For fetching Data
 TOTAL_REQUEST_DATE_LENGTH = 10
-TOTAL_RETRY_FOR_FETCH_FAIL = 10
-SLEEP_SECONDS_BETWEEN_RQ = 1.4
+TOTAL_RETRY_FOR_FETCH_FAIL = 12
+SLEEP_SECONDS_BETWEEN_RQ = 1.5
 
 # For keeping old records
 MAX_DAYS_KEEP_OLD_STOCKITEMS = 30
@@ -25,9 +25,22 @@ DATAFRAME_COLUMN_NAMES = [
         "per",
         "pbr",
         "roe",
+        "market_name",
         "answer",
         "tick"
 ]
+
+
+MARKET_NUMBER = {
+        "Dummy" : 0,
+        "KOSPI" : 1,
+        "KOSDAQ" : 2
+}
+
+## Moeny
+KR_BOTTOMLINE = 5000
+
+
 
 # KRX configs
 KRX__GEN_OPT_URL = 'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
