@@ -169,8 +169,6 @@ class MainWrapperKR:
                 else:
                     stock_item.stock_name = self.stockList.tickerToName[str(stock_item.stock_tick.stock_tick)]
             # update
-            # StockItemListName.objects.bulk_update(exist_needsupdate_stocktick,
-            #                                       update_fields=['stock_name'])
             bulk_update(exist_needsupdate_stocktick)
 
         # create
@@ -228,62 +226,70 @@ class MainWrapperKR:
 
         tmpStockSectionDF = self.stockInfo.infoFinanceData
 
-        # 없는 종목 (추가해야하는지 확인)
-        tmp_exist_stockitem = StockItemListSection.objects.all().values_list('stock_tick__stock_tick', flat=True)
-        tmp_new_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
-        #self.stockList.KOSPI + self.stockList.KOSDAQ
-        tmp_new_stocksets = set(set(tmp_new_stockticks) - set(tmp_exist_stockitem))
-
-        if tmp_new_stocksets:
-            logger.critical("MainWrapperKR - createStockItemListSection; Update CSV")
-            logger.critical(f"MainWrapperKR - createStockItemListSection; Missing information  : \n{tmp_new_stocksets}")
 
         if isinstance(tmpStockSectionDF, pd.DataFrame) and '업종명' in tmpStockSectionDF:  # is a dataframe
             filter_1 = []
+            cnt_exist = 0
             tmpStockTickCol = tmpStockSectionDF['종목코드'].tolist()
 
+            # 없는 종목 (추가해야하는지 확인)
+            query_stocklistSection = StockItemListSection.objects.all()
+            tmp_exist_stockList = query_stocklistSection.values_list('stock_tick__stock_tick', flat=True)
+
+            tmp_new_stockticks = StockTick.objects.all().values_list('stock_tick', flat=True)
+            tmp_new_stocksets = set(set(tmp_new_stockticks) - set(tmp_exist_stockList))
+            if tmp_new_stocksets:
+                logger.critical("MainWrapperKR - createStockItemListSection; Update CSV")
+                logger.critical(
+                    f"MainWrapperKR - createStockItemListSection; Missing information/new stockticks  : \n{tmp_new_stocksets}")
+
             create_new_stocklistsection = \
-                set(tmpStockTickCol) - set(tmp_exist_stockitem)
+                set(tmpStockTickCol) - set(tmp_exist_stockList)
+            logger.critical(
+                f"MainWrapperKR - createStockItemListSection; Missing information/new stocklistsection  : \n{create_new_stocklistsection}")
 
             for tick in create_new_stocklistsection:
                 try:
-                    # StockTick 구하기
-                    tmpStockTick = StockTick.objects.get(
-                        stock_tick=tick
-                    )
-
-                    # Section 구하기
-                    try:  # 없으면 Other 할당
-                        # section = str(selectedDF["업종명"])
-                        section = str(
-                            tmpStockSectionDF.loc[tmpStockSectionDF['종목코드'] == tick, '업종명'].values[0]
+                    # 없으면 create
+                    if not query_stocklistSection.filter(Q(stock_tick__stock_tick=tick)).exists():
+                        # StockTick 구하기
+                        tmpStockTick = StockTick.objects.get(
+                            stock_tick=tick
                         )
-                    except:
-                        section = str("Other")
-                    tmpSectionName = StockSection.objects.get(
-                        section_name=section
-                    )
 
-                    # totalSum 구하기
-                    tmpTotalSum = int(
-                        tmpStockSectionDF.loc[tmpStockSectionDF['종목코드'] == tick, "시가총액"].values[0]
-                    )
-
-                    filter_1.append(
-                        StockItemListSection(
-                            stock_tick=tmpStockTick,
-                            section_name=tmpSectionName,
-                            total_sum=tmpTotalSum
+                        # Section 구하기
+                        try:  # 없으면 Other 할당
+                            # section = str(selectedDF["업종명"])
+                            section = str(
+                                tmpStockSectionDF.loc[tmpStockSectionDF['종목코드'] == tick, '업종명'].values[0]
+                            )
+                        except:
+                            section = str("Other")
+                        tmpSectionName = StockSection.objects.get(
+                            section_name=section
                         )
-                    )
 
+                        # totalSum 구하기
+                        tmpTotalSum = int(
+                            tmpStockSectionDF.loc[tmpStockSectionDF['종목코드'] == tick, "시가총액"].values[0]
+                        )
+
+                        filter_1.append(
+                            StockItemListSection(
+                                stock_tick=tmpStockTick,
+                                section_name=tmpSectionName,
+                                total_sum=tmpTotalSum
+                            )
+                        )
+                    else: cnt_exist += 1
                 except:
                     continue
 
             StockItemListSection.objects.bulk_create(filter_1)
-
+            logger.info(f"MainWrapperKR - createStockItemListSection; cnt_exist : {cnt_exist}")
         else:
             logger.warning("MainWrapperKR - createStockItemListSection; infoFinanceData Not a dataframe")
+
 
 
     def deleteStockItem(self, dateStamp:datetime):

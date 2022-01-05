@@ -341,6 +341,73 @@ class CreateKRStocks(TestCase):
             print(f'row : {row}')
 
 
+    def test_createStockItemListSection(self):
+
+        import pickle, os
+        import copy
+        from pathlib import Path
+        import pandas as pd
+
+        root = Path(__file__).resolve().parent.parent
+        #  /Users/yanghojun/Library/Mobile Documents/com~apple~CloudDocs/Code_mac/vscode/app_StockManager/django_kakaoChatbot/appStockInfo
+        mainWrapper = MainWrapperKR()
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockList.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockList = copy.deepcopy(pickle.load(f))
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'stockInfo.p'
+                ), 'rb'
+        ) as f:
+            mainWrapper.stockInfo = copy.deepcopy(pickle.load(f))
+
+
+        # Required
+        # KOSPI
+        tickSamsung = "005930"
+        sectionSamsung = "전기전자"
+
+        mainWrapper.createStockTick(
+            mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        mainWrapper.createStockTick(
+            mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
+        mainWrapper.createStockItemListName(
+            mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        mainWrapper.createStockItemListName(
+            mainWrapper.stockList.KOSDAQ, "KOSDAQ"
+        )
+        mainWrapper.createStockSection()
+        mainWrapper.createStockItemListSection()
+
+
+        # Test
+        mainWrapper.createStockTick(
+            mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        mainWrapper.createStockItemListName(
+            mainWrapper.stockList.KOSPI, "KOSPI"
+        )
+        mainWrapper.createStockItemListSection()
+
+
+        self.assertEqual(
+            StockItemListSection.objects.filter(
+                Q(stock_tick__stock_tick=tickSamsung)
+            ).count(), 1
+        )
+
+
+
     def test_createStockItemUpdate(self):
 
         import pickle, os

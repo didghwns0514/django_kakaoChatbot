@@ -13,9 +13,14 @@ from appStockPrediction.models import (
 import ConfigFile as CONF
 import CommonFunction as CF
 
+import numpy as np
 import xgboost
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+"""
+score in sklearn : https://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics
+
+"""
 from sklearn.metrics import explained_variance_score
 
 import datetime
@@ -32,16 +37,16 @@ class MainWrapperKR:
 
     def doAction(self):
 
-        self.createStockPredictionHistory()
+        self.createStockPredictionHistory(datetime.datetime.now())
 
 
-    def createStockPredictionHistory(self):
+    def createStockPredictionHistory(self, callDate:datetime.datetime):
         """
         StockPrediction CRUD
         """
         logger.info("MainWrapperKR - createStockPredictionHistory")
 
-        predictionDF, predictionDay = self.createPrediction()
+        predictionDF, predictionDay = self.createPrediction(callDate=callDate)
         tmpPredictionDayFilter = StockPredictionHistory.objects.all()
         filter_1 = []
 
@@ -61,11 +66,16 @@ class MainWrapperKR:
                         stock_tick=tmpTick
                     )
 
+                    tmp_StockName = StockItemListName.objects.get(
+                        stock_tick__stock_tick=tmpTick
+                    )
+
                     filter_1.append(
                         StockPredictionHistory(
+                            stock_name=tmp_StockName,
                             stock_tick=tmp_StockTick,
                             prediction_time=predictionDay,
-                            prediction_percent=(tmpPrediction - tmpClose) / tmpClose,
+                            prediction_percent=((tmpPrediction - tmpClose) / tmpClose) * 100,
                             value=tmpPrediction
                         )
                     )
@@ -82,7 +92,10 @@ class MainWrapperKR:
 
 
 
-    def createPrediction(self) -> [pd.DataFrame, datetime.datetime]:
+    def createPrediction(self,
+                         callDate:datetime.datetime,
+                         tmpMainDF=None,tmpPredDF=None,tmpWindowDF=None
+                         ) -> [pd.DataFrame, datetime.datetime]:
         """
         train XGBoost and return Result
         참조 : https://riverzayden.tistory.com/17
@@ -94,7 +107,10 @@ class MainWrapperKR:
 
         """
         logger.info("MainWrapperKR - createPrediction")
-        tmpMainDF, tmpPredDF = self.createPredictionPrep()
+        if not isinstance(tmpMainDF,pd.DataFrame) or \
+                not isinstance(tmpPredDF, pd.DataFrame) or \
+                not isinstance(tmpWindowDF, pd.DataFrame):
+            tmpMainDF, tmpPredDF, tmpWindowDF = self.createPredictionPrep(callDate=callDate)
 
         # Convert object types to numeric
         tmpMainDF['section_integer'] = pd.to_numeric(tmpMainDF['section_integer'], errors='coerce')
@@ -104,12 +120,14 @@ class MainWrapperKR:
         tmpPredDF['total_sum']       = pd.to_numeric(tmpPredDF['total_sum'], errors='coerce')
         tmpPredDF['time_elapsed']    = pd.to_numeric(tmpPredDF['time_elapsed'], errors='coerce')
 
-        print(f'tmpMainDF')
-        tmpMainDF.info()
-        tmpMainDF.head(3)
-        print(f'tmpPredDF')
-        tmpPredDF.info()
-        tmpPredDF.head(3)
+        # print(f'tmpMainDF')
+        # print(f'len(tmpMainDF) : {len(tmpMainDF)}')
+        # tmpMainDF.info()
+        # tmpMainDF.head(3)
+        # print(f'tmpPredDF')
+        # print(f'len(tmpPredDF) : {len(tmpPredDF)}')
+        # tmpPredDF.info()
+        # tmpPredDF.head(3)
 
         # from Main Dataframe
         X, Y = tmpMainDF.loc[:, :'roe'], tmpMainDF.loc[:, 'answer':'answer']
@@ -117,12 +135,19 @@ class MainWrapperKR:
         # from Prediction Dataframe -> "answer" column is not present here
         PX, PX_indexTick = tmpPredDF.loc[:, :'roe'], tmpPredDF.loc[:, 'tick':]
 
-        X_train, X_test, y_train, y_test =  train_test_split(X, Y, test_size=0.1)
+        """
+        Param explained : https://towardsdatascience.com/a-guide-to-xgboost-hyperparameters-87980c7f44a9
+        Hyper and more : https://xgboost.readthedocs.io/en/latest/parameter.html
+    
+        """
+        X_train, X_test, y_train, y_test =  train_test_split(X, Y, test_size=0.2)
         xgb_model = xgboost.XGBRegressor(n_estimators=100,
-                                         learning_rate=0.08,
-                                         gamma=0, subsample=0.75,
+                                         subsample=0.75,
+                                         learning_rate=0.3,
+                                         gamma=0,
                                          colsample_bytree=1,
-                                         max_depth=7)
+                                         max_depth=10,
+                                         eval_metric="mape")
 
         # Train Model
         xgb_model.fit(X_train, y_train)
@@ -134,12 +159,25 @@ class MainWrapperKR:
 
         # Prediction for test
         test_predictions = xgb_model.predict(X_test)
+        # Scores
+        # 1)
+        test_score = explained_variance_score(test_predictions, y_test)
+        logger.info(f"MainWrapperKR - createPrediction; Prediction score test : {test_score}")
+        # 2)
+        train_score = xgb_model.score(X_train, y_train)
+        logger.info(f"MainWrapperKR - createPrediction; Prediction score train : {train_score}")
+        # 3)
+        mpe = myMPE(test_predictions, y_test.to_numpy())
+        logger.info(f"MainWrapperKR - createPrediction; Prediction score train/mpe : {mpe}")
 
-        # Score
-        r_sq = xgb_model.score(X_train, y_train)
+        ## print
+        print(f'test_score : {test_score}')
+        print(f'train_score : {train_score}')
+        print(f'mpe : {mpe}')
 
         # Prediction for real
         real_predictions = xgb_model.predict(PX)
+
 
         PX_indexTick['prediction'] = real_predictions.tolist()
         PX_indexTick['close'] = PX['close']
@@ -161,7 +199,7 @@ class MainWrapperKR:
         return PX_indexTick, CF.getNextPredictionDate(latestDate)
 
 
-    def createPredictionPrep(self) -> [pd.DataFrame, pd.DataFrame]:
+    def createPredictionPrep(self, callDate:datetime.datetime) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         create Dataframe and returns total stock dataframe
         for XGBoost prediction
@@ -171,8 +209,9 @@ class MainWrapperKR:
         # global dataframe
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
+        globalDataframeWindow = CF.generateEmptyDataframe("Window")
 
-        globalDate = CF.getNextPredictionDate(datetime.datetime.now())
+        globalDate = CF.getNextPredictionDate(callDate)
 
         # cached stockitems
         all_Stockitems = StockItem.objects.all()
@@ -183,7 +222,7 @@ class MainWrapperKR:
         )
 
         for idx, tick in enumerate(exist_stocktick):
-            tmpMain, tmpPrediction = self.createDataframe(tick,
+            tmpMain, tmpPrediction, tmpWindow = self.createDataframe(tick,
                                                           all_Stockitems=all_Stockitems,
                                                           callDate=globalDate,
                                                           countIndex=idx)
@@ -193,20 +232,24 @@ class MainWrapperKR:
             globalDataframePredictions = pd.concat([
                 globalDataframePredictions, tmpPrediction
             ])
+            globalDataframeWindow = pd.concat([
+                globalDataframeWindow, tmpWindow
+            ])
 
-        return globalDataframeMain, globalDataframePredictions
+        return globalDataframeMain, globalDataframePredictions, globalDataframeWindow
 
 
     def createDataframe(self, tick,
                         all_Stockitems:QuerySet,
                         callDate:datetime.datetime,
-                        countIndex=0) -> [pd.DataFrame, pd.DataFrame]:
+                        countIndex=0) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
         if countIndex % 100 == 0:
             logger.info(f"MainWrapperKR - createDataframe : {countIndex}")
 
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
+        globalDataframeWindow = CF.generateEmptyDataframe("Window")
 
         startDate = CF.getNextPredictionDate(
             callDate - datetime.timedelta(CONF.TOTAL_REQUEST_DATE_LENGTH)
@@ -224,11 +267,12 @@ class MainWrapperKR:
 
             previousAnswer = None
             for idx, stockitem in enumerate(tmpQuery):
-
+                tmp_regDate = stockitem.reg_date
+                tmp_regDatetime = datetime.datetime(tmp_regDate.year, tmp_regDate.month, tmp_regDate.day)
                 tmpInsertData = {
                     'section_integer' : int(stockitem.stock_map_section.section_name.section_integer),
                     'total_sum' : int(stockitem.stock_map_section.total_sum),
-                    'time_elapsed' : int(abs(callDate.day - stockitem.reg_date.day)),
+                    'time_elapsed' : abs(int((callDate - tmp_regDatetime).days)),
                     'open' : stockitem.open,
                     'high' : stockitem.high,
                     'low' : stockitem.low,
@@ -245,6 +289,12 @@ class MainWrapperKR:
                         tmpInsertData, ignore_index=True
                     )
                     previousAnswer = stockitem.close
+                # elif idx == 1 and False: # remove data lookahed
+                #     tmpInsertData["answer"] = previousAnswer
+                #     globalDataframeWindow = globalDataframeWindow.append(
+                #         tmpInsertData, ignore_index=True
+                #     )
+                #     previousAnswer = stockitem.close
                 else:
                     tmpInsertData["answer"] = previousAnswer
                     globalDataframeMain = globalDataframeMain.append(
@@ -256,9 +306,10 @@ class MainWrapperKR:
             logger.warning(f"appStockPrediction - MainWrapperKR - createDataframe; {e}")
 
         finally:
-            return globalDataframeMain, globalDataframePredictions
+            return globalDataframeMain, globalDataframePredictions, globalDataframeWindow
 
-
+def myMPE( y_pred, y_true):
+    return np.mean((y_true - y_pred) / y_true) * 100
 
 # active information columns only selected
 # exist_stockitems = StockItem.objects.filter(

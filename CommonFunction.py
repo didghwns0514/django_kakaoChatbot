@@ -45,13 +45,18 @@ def getNextPredictionDate(callDate:datetime.datetime):
 
 def generateEmptyDataframe(switch:str="Main"):
 
-    assert(switch in ["Main", "Prediction"])
+    assert(switch in ["Main", "Prediction", "Window"])
 
     if switch == "Main":
         globalDataframeMain = pd.DataFrame(
             columns=CONF.DATAFRAME_COLUMN_NAMES
         )
         return globalDataframeMain
+    elif switch == "Window":
+        globalDataframeWindow = pd.DataFrame(
+            columns=CONF.DATAFRAME_COLUMN_NAMES
+        )
+        return globalDataframeWindow
     elif switch == "Prediction":
         globalDataframePredictions = pd.DataFrame(
             columns=CONF.DATAFRAME_COLUMN_NAMES[:len(CONF.DATAFRAME_COLUMN_NAMES) - 2]  # "answer" / "tick" removed
