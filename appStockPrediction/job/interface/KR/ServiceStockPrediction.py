@@ -10,19 +10,17 @@ from appStockInfo.models import (
 from appStockPrediction.models import (
     StockPredictionHistory
 )
+from appStockPrediction.job.interface.predictionModels.builder import Builder
 
 import ConfigFile as CONF
 import CommonFunction as CF
 
 import numpy as np
-import xgboost
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 """
 score in sklearn : https://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics
 
 """
-from sklearn.metrics import explained_variance_score
 
 import datetime
 import pandas as pd
@@ -36,10 +34,15 @@ class MainWrapperKR:
 
     def __init__(self):pass
 
-    def doAction(self):
+    def doAction(self, isCallFixedDatetime:bool=True):
         logger.info("MainWrapperKR - doAction")
-        self.deleteStockPredictionHistory(datetime.datetime.now())
-        self.createStockPredictionHistory(datetime.datetime.now())
+
+        if not isCallFixedDatetime:
+            self.deleteStockPredictionHistory(datetime.datetime.now())
+            self.createStockPredictionHistory(datetime.datetime.now())
+        else:
+            self.deleteStockPredictionHistory(datetime.datetime(2022,1,6,10))
+            self.createStockPredictionHistory(datetime.datetime(2022,1,6,10))
 
 
     def deleteStockPredictionHistory(self, callDate:datetime.datetime):
@@ -51,7 +54,10 @@ class MainWrapperKR:
             time_End - datetime.timedelta(days=CONF.MAX_DAYS_KEEP_OLD_STOCKITEMS)
         )
 
-        StockPredictionHistory.objects.filter(~Q(prediction_time__range=(time_Start, time_End))).delete()
+        tmpQuery = StockPredictionHistory.objects.filter(~Q(prediction_time__range=(time_Start, time_End)))
+        logger.info(f"MainWrapperKR - deleteStockPredictionHistory; Total deleted number of history : {len(tmpQuery)}")
+        tmpQuery.delete()
+
 
 
     def createStockPredictionHistory(self, callDate:datetime.datetime):
@@ -175,41 +181,11 @@ class MainWrapperKR:
         """
         Param explained : https://towardsdatascience.com/a-guide-to-xgboost-hyperparameters-87980c7f44a9
         Hyper and more : https://xgboost.readthedocs.io/en/latest/parameter.html
-    
         """
         X_train, X_test, y_train, y_test =  train_test_split(X, Y, test_size=0.2)
-        xgb_model = xgboost.XGBRegressor(n_estimators=100,
-                                         subsample=0.75,
-                                         learning_rate=0.3,
-                                         gamma=0,
-                                         colsample_bytree=1,
-                                         max_depth=10,
-                                         eval_metric="mape")
 
-        # Train Model
-        xgb_model.fit(X_train, y_train)
-
-        # Plot importance
-        # UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
-        # terminating with uncaught exception of type NSException
-        #xgboost.plot_importance(xgb_model)
-
-        # Prediction for test
-        test_predictions = xgb_model.predict(X_test)
-        # Scores
-        # 1)
-        test_score = explained_variance_score(test_predictions, y_test)
-        logger.info(f"MainWrapperKR - createPrediction; Prediction score test : {test_score}")
-        # 2)
-        train_score = xgb_model.score(X_train, y_train)
-        logger.info(f"MainWrapperKR - createPrediction; Prediction score train : {train_score}")
-        # 3)
-        mpe = myMPE(test_predictions, y_test.to_numpy())
-        logger.info(f"MainWrapperKR - createPrediction; Prediction score train/mpe : {mpe}")
-
-        # Prediction for real
-        real_predictions = xgb_model.predict(PX)
-
+        # Build and predict
+        real_predictions = Builder.build(X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
 
         PX_indexTick['prediction'] = real_predictions.tolist()
         PX_indexTick['close'] = PX['close']
@@ -319,7 +295,7 @@ class MainWrapperKR:
                 tmp_regDatetime = datetime.datetime(tmp_regDate.year, tmp_regDate.month, tmp_regDate.day)
                 tmpInsertData = {
                     'section_integer' : int(stockitem.stock_map_section.section_name.section_integer),
-                    'total_sum' : int(stockitem.stock_map_section.total_sum),
+                    'total_sum' : int(stockitem.stock_map_section.total_sum / 10**7),
                     'time_elapsed' : abs(int((callDate - tmp_regDatetime).days)),
                     'open' : stockitem.open,
                     'high' : stockitem.high,
@@ -357,6 +333,3 @@ class MainWrapperKR:
         finally:
             return globalDataframeMain, globalDataframePredictions, globalDataframeWindow
 
-
-def myMPE( y_pred, y_true):
-    return np.mean((y_true - y_pred) / y_true) * 100
