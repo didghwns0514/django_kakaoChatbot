@@ -25,7 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = CONFI.DJANGO_SECRET
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# DEBUG = False
+DEBUG = CONFI.DEBUG
 
 ALLOWED_HOSTS = ['hjyang.iptime.org',
                  'localhost',
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'rest_framework.authtoken',
     'log_viewer', # Viewer for logs
+    'bootstrap4',
 
     # my apps
     'appStockInfo',
@@ -77,7 +79,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates'
+            #BASE_DIR / 'templates'
+            os.path.join(BASE_DIR, 'templates')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -192,6 +195,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+#STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
 # Default primary key field type

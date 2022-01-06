@@ -1,7 +1,7 @@
 from datetime import datetime
 
 # For fetching Data
-TOTAL_REQUEST_DATE_LENGTH = 10
+TOTAL_REQUEST_DATE_LENGTH = 7
 TOTAL_RETRY_FOR_FETCH_FAIL = 12
 SLEEP_SECONDS_BETWEEN_RQ = 1.5
 
