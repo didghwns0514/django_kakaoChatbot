@@ -11,6 +11,9 @@ MAX_DAYS_KEEP_OLD_STOCKITEMS = 30
 # Stock Time hour in KTZ
 MARKET_TOTAL_FINISH_HOUR = 17
 
+# Total Stock Nums Normalizer value
+STOCK_NUM_NORMALIZER = 10**7
+
 # Dataframe columns
 DATAFRAME_COLUMN_NAMES = [
         "section_integer",
@@ -20,12 +23,13 @@ DATAFRAME_COLUMN_NAMES = [
         "high",
         "low",
         "close",
+        "gap",
         "volume",
         "div",
         "per",
         "pbr",
-        "roe",
         "market_name",
+        "roe",
         "answer",
         "tick"
 ]

@@ -54,8 +54,7 @@ def getNextPredictionDate(callDate:datetime.datetime):
     return callDateFiltered
 
 
-def getStartFetchingDate(callEndDate:datetime.datetime):
-
+def getEndFetchingDate(callEndDate:datetime.datetime):
     for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
         kr_holidays = pytimekr.holidays()
         if kr_holidays: break
@@ -65,8 +64,22 @@ def getStartFetchingDate(callEndDate:datetime.datetime):
     if not CONF.MARKET_TOTAL_FINISH_HOUR <= callEndDate.hour < 24:
         callEndDate -= datetime.timedelta(days=1) # get more data worth of 1 day
 
+    return callEndDate
+
+
+def getStartFetchingDate(callStartDate:datetime.datetime):
+
+    for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+        kr_holidays = pytimekr.holidays()
+        if kr_holidays: break
+    else:
+        logger.critical('getStartFetchingDate; Date generation failed')
+
+    if not CONF.MARKET_TOTAL_FINISH_HOUR <= callStartDate.hour < 24:
+        callStartDate -= datetime.timedelta(days=1) # get more data worth of 1 day
+
     callDateFiltered = datetime.datetime(
-        callEndDate.year, callEndDate.month, callEndDate.day
+        callStartDate.year, callStartDate.month, callStartDate.day
     )
 
     # 0, 1, 2, 3, 4, 5, 6

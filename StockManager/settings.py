@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'log_viewer', # Viewer for logs
     'bootstrap4',
+    'rangefilter',
 
     # my apps
     'appStockInfo',
