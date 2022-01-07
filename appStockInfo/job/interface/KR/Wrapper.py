@@ -39,7 +39,7 @@ class MainWrapperKR:
         self.stockInfo = GetStockInfo()
 
 
-    def doAction(self, isDataFetchOn:bool=False):
+    def doAction(self, isDataFetchOn:bool=True):
         logger.info("MainWrapperKR - doAction")
 
         #self.clearConnections()

@@ -33,7 +33,7 @@ class MainWrapperKR:
 
     def __init__(self):pass
 
-    def doAction(self, isCallCurrentDatetime:bool=False):
+    def doAction(self, isCallCurrentDatetime:bool=True):
         logger.info("MainWrapperKR - doAction")
 
         if isCallCurrentDatetime:
