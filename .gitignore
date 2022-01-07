@@ -12,3 +12,4 @@
 /templates/
 /staticfiles/
 /static/
+/appStockPrediction/testFolders/result_XGBoost/

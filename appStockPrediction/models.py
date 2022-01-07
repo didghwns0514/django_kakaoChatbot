@@ -14,7 +14,7 @@ class StockPredictionHistory(models.Model):
                                    on_delete=models.CASCADE,
                                    default="Dummy")
     prediction_time = models.DateTimeField(default=timezone.now, null=False)
-    prediction_percent = models.FloatField(default=0, null=False)
+    prediction = models.FloatField(default=0, null=False)
     initial_close = models.FloatField(default=0, null=False)
     value = models.FloatField(default=0, null=False)
 

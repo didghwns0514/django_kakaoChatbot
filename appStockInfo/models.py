@@ -33,6 +33,9 @@ class StockItemListSection(models.Model):
     section_name = models.ForeignKey(StockSection, on_delete=models.CASCADE, default="Dummy")
     total_sum = models.BigIntegerField(default=0)
 
+    def __str__(self):
+        return self.section_name.section_name
+
 
 class StockItem(models.Model):
     stock_name = models.ForeignKey(StockItemListName,
@@ -68,6 +71,8 @@ class StockItem(models.Model):
     roe = models.FloatField(default=0.0)
     #roa = models.FloatField(default=0.0)
 
+    def __str__(self):
+        return self.stock_name.stock_name
 
 class StockLastUpdateTime(models.Model):
     update_time = models.DateTimeField(default=timezone.now, null=False)
