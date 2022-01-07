@@ -1,7 +1,7 @@
 from datetime import datetime
 
 # For fetching Data
-TOTAL_REQUEST_DATE_LENGTH = 10
+TOTAL_REQUEST_DATE_LENGTH = 7
 TOTAL_RETRY_FOR_FETCH_FAIL = 12
 SLEEP_SECONDS_BETWEEN_RQ = 1.5
 
@@ -10,6 +10,9 @@ MAX_DAYS_KEEP_OLD_STOCKITEMS = 30
 
 # Stock Time hour in KTZ
 MARKET_TOTAL_FINISH_HOUR = 17
+
+# Total Stock Nums Normalizer value
+STOCK_NUM_NORMALIZER = 10**7
 
 # Dataframe columns
 DATAFRAME_COLUMN_NAMES = [
@@ -20,12 +23,13 @@ DATAFRAME_COLUMN_NAMES = [
         "high",
         "low",
         "close",
+        "gap",
         "volume",
         "div",
         "per",
         "pbr",
-        "roe",
         "market_name",
+        "roe",
         "answer",
         "tick"
 ]

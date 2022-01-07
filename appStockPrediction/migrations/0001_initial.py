@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('prediction_time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('prediction_percent', models.FloatField(default=0)),
+                ('prediction', models.FloatField(default=0)),
                 ('value', models.FloatField(default=0)),
                 ('stock_name', models.ForeignKey(default='Dummy', on_delete=django.db.models.deletion.CASCADE, to='appStockInfo.stockitemlistname')),
                 ('stock_tick', models.ForeignKey(default='Dummy', on_delete=django.db.models.deletion.CASCADE, to='appStockInfo.stocktick')),

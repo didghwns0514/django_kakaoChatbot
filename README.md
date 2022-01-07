@@ -27,7 +27,10 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 9) TimeZone
    1) [TimeZone-1](https://devlog.jwgo.kr/2020/10/28/using-timezone-in-django/)
    2) [TimeZone-2](https://8percent.github.io/2017-05-31/django-timezone-problem/) 
-
+10) Admin lookup
+   1) [Search fields](https://medium.com/@bdv111/django-admin%EC%9D%98-%EA%B2%80%EC%83%89%EC%9D%84-%EC%9C%84%ED%95%9C-search-fields%EA%B0%80-db%EC%97%90-%EC%9D%BC%EC%9C%BC%ED%82%AC-%EC%88%98-%EC%9E%88%EB%8A%94-%EC%84%B1%EB%8A%A5-%EB%AC%B8%EC%A0%9C-3f816aff293e)
+   2) [Admin page 적용가능 방식-1](https://wayhome25.github.io/django/2017/03/22/django-ep8-django-admin/)
+   3) [Admin page 적용가능 방식-2](https://ssungkang.tistory.com/entry/Django-admin-%E1%84%91%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8C%E1%85%B5-%E1%84%92%E1%85%AD%E1%84%8B%E1%85%B2%E1%86%AF%E1%84%8C%E1%85%A5%E1%86%A8%E1%84%8B%E1%85%B3%E1%84%85%E1%85%A9-%E1%84%83%E1%85%A1%E1%84%85%E1%85%AE%E1%84%80%E1%85%B5)
 ## 중요 참조
 1) [비슷한 django 예시](https://github.com/Ryu0n/stock_analyzer)
 
@@ -45,7 +48,7 @@ Will provide you `**Real-Time Top Stocks**` at any time.
 4) 주식 모듈 관련 정리
    1) Yahoo
       1) [yahoo finance 정리 1](https://scribblinganything.tistory.com/377)
-   2) Finance Data Reader
+   2) Finance Data Reader  
       2) [Finance Data Reader 정리 1](https://mokeya.tistory.com/72)
 
 **Framework & library used :**

@@ -39,7 +39,7 @@ class MainWrapperKR:
         self.stockInfo = GetStockInfo()
 
 
-    def doAction(self, isDataFetchOn:bool=True):
+    def doAction(self, isDataFetchOn:bool=False):
         logger.info("MainWrapperKR - doAction")
 
         #self.clearConnections()
@@ -435,7 +435,7 @@ class MainWrapperKR:
                     if no dataframe is retrieved
                     -> Check if data exists
                     """
-                    startDate = CF.getStartFetchingDate(callEndDate=callDate)
+                    startDate = CF.getStartFetchingDate(callStartDate=callDate)
                     endDate = callDate
                     stockItemsQuery = query_stockitems.filter(
                              Q(stock_name__stock_tick__stock_tick=tick)
@@ -752,7 +752,7 @@ def FinaceInformation2(market=None, timeoutSeconds=2):
     # otp = rq.post(CONF.KRX__GEN_OPT_URL, tmpKOSPI, headers=headers, timeout=timeoutSeconds).text
     # otp = rq.post("https://webhook.site/8ffea47b-1e4b-4c60-b135-eca191393c96", tmpKOSPI, headers=headers, timeout=timeoutSeconds).text
     otp = 'a1n6kaOi+6ccSQWhSJQn6bW/0lpfBRk5S+zXZdMA4aURtSksuLS7Bnxpl86F7dAOkunw9BBwugQaSjGAcH15ee4rg6nj43HicYMcso3v4LstBgM+EFJCxYg3zco1gIgRZqIo4cIzoURnTI8+MmkJ4m8vFLhSKmM794gFu+ThsO31lY4woqehX8j6OlXFDcfHdV4NbYo4+D2Rwcfj24VnU3Zpq3ik/Dyw3FdyOXhJkBI='
-    print(f'otp1 : {otp}')
+    #print(f'otp1 : {otp}')
     # https://webhook.site/8ffea47b-1e4b-4c60-b135-eca191393c96
     # download.cmd 에서 General의 Request URL 부분
     down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
@@ -763,7 +763,7 @@ def FinaceInformation2(market=None, timeoutSeconds=2):
     tmpKOSDAQ = CONF.KRX__GEN_OPT_DATA_KOSDAQ
     tmpKOSDAQ['trdDd'] = datetime.today().strftime("%Y%m%d")
     # otp = rq.post(CONF.KRX__GEN_OPT_URL, tmpKOSDAQ, headers=headers, timeout=timeoutSeconds).text
-    print(f'otp2 : {otp}')
+    #print(f'otp2 : {otp}')
     down_sector_KQ = rq.post(down_url, {'code': otp}, headers=headers, timeout=timeoutSeconds)
     sector_KQ = pd.read_csv(BytesIO(down_sector_KQ.content), encoding='EUC-KR')
     # print(f'sector_KQ : {sector_KQ.head(10)}')

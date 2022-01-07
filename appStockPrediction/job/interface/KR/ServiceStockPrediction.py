@@ -10,19 +10,16 @@ from appStockInfo.models import (
 from appStockPrediction.models import (
     StockPredictionHistory
 )
+from appStockPrediction.job.interface.predictionModels.builder import Builder
 
 import ConfigFile as CONF
 import CommonFunction as CF
 
-import numpy as np
-import xgboost
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 """
 score in sklearn : https://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics
 
 """
-from sklearn.metrics import explained_variance_score
 
 import datetime
 import pandas as pd
@@ -36,22 +33,30 @@ class MainWrapperKR:
 
     def __init__(self):pass
 
-    def doAction(self):
+    def doAction(self, isCallCurrentDatetime:bool=False):
         logger.info("MainWrapperKR - doAction")
-        self.deleteStockPredictionHistory(datetime.datetime.now())
-        self.createStockPredictionHistory(datetime.datetime.now())
+
+        if isCallCurrentDatetime:
+            self.deleteStockPredictionHistory(datetime.datetime.now())
+            self.createStockPredictionHistory(datetime.datetime.now())
+        else:
+            self.deleteStockPredictionHistory(datetime.datetime(2022,1,7,10))
+            self.createStockPredictionHistory(datetime.datetime(2022,1,7,10))
 
 
     def deleteStockPredictionHistory(self, callDate:datetime.datetime):
         logger.info("MainWrapperKR - deleteStockPredictionHistory")
 
         # 모든것을 지움 -> 일자 지난 것에 대해서
-        time_End = callDate
+        time_End = CF.getNextPredictionDate(callDate)
         time_Start = CF.getNextPredictionDate(
             time_End - datetime.timedelta(days=CONF.MAX_DAYS_KEEP_OLD_STOCKITEMS)
         )
 
-        StockPredictionHistory.objects.filter(~Q(prediction_time__range=(time_Start, time_End))).delete()
+        tmpQuery = StockPredictionHistory.objects.filter(~Q(prediction_time__gte=time_Start))
+        logger.info(f"MainWrapperKR - deleteStockPredictionHistory; Total deleted number of history : {len(tmpQuery)}")
+        logger.info(f"MainWrapperKR - deleteStockPredictionHistory; Start : {time_Start}, End : {time_End}")
+        tmpQuery.delete()
 
 
     def createStockPredictionHistory(self, callDate:datetime.datetime):
@@ -61,16 +66,22 @@ class MainWrapperKR:
         logger.info("MainWrapperKR - createStockPredictionHistory")
 
         predictionDF, predictionDay = self.createPrediction(callDate=callDate)
+        # print(f'predictionDF.head(3) : {predictionDF.head(3)}')
 
+
+        logger.info(f"MainWrapperKR - createStockPredictionHistory; predictionDay : {predictionDay}, callDate : {callDate}")
         filter_1 = []
         filter_2 = []
 
         # Delete unmade prediction stockticks
-        predictionStockTicksList = predictionDF["tick"].tolist()
-        StockPredictionHistory.objects.filter(
-            ~Q(stock_tick__stock_tick__in=predictionStockTicksList)
-        ).delete()
-        logger.info(f"MainWrapperKR - createStockPredictionHistory; Deleted unwanted prediction history")
+        # predictionStockTicksList = predictionDF["tick"].tolist()
+        # tmpQueryDelete = StockPredictionHistory.objects.filter(
+        #     ~Q(stock_tick__stock_tick__in=predictionStockTicksList)
+        # )
+        # logger.info(f"MainWrapperKR - createStockPredictionHistory; deleted unwanted prediction history")
+        # logger.info(f"MainWrapperKR - createStockPredictionHistory; deleted unwanted datas length : {len(tmpQueryDelete)}")
+        # tmpQueryDelete.delete()
+
 
         tmpPredictionDayFilter = StockPredictionHistory.objects.all()
         for idx, row in predictionDF.iterrows():
@@ -78,6 +89,8 @@ class MainWrapperKR:
                 tmpTick = row['tick']
                 tmpPrediction = row['prediction']
                 tmpClose = row['close']
+                tmpOpen = row['open']
+                tmpGap = row['gap']
 
                 # for CRUD
                 # Not existing
@@ -99,31 +112,36 @@ class MainWrapperKR:
                             stock_name=tmp_StockName,
                             stock_tick=tmp_StockTick,
                             prediction_time=predictionDay,
-                            prediction_percent=((tmpPrediction - tmpClose) / tmpClose) * 100,
+                            #prediction=((tmpPrediction - tmpClose) / tmpClose) * 100,
+                            prediction=( tmpPrediction / tmpClose ) * 100,
                             value=tmpPrediction,
                             initial_close=tmpClose
                         )
                     )
                 else: # existing
                     tmp_StockPredictionHistory = tmpPredictionDayFilter.get(
-                        stock_tick__stock_tick=tmpTick
+                        stock_tick__stock_tick=tmpTick,
+                        prediction_time=predictionDay
                     )
                     # update
                     filter_2.append(tmpTick)
+                    tmp_StockPredictionHistory.prediction = (tmpPrediction / tmpClose ) *100 # ((tmpPrediction + tmpOpen - tmpClose) / tmpClose)*100
                     tmp_StockPredictionHistory.value = tmpPrediction
-                    tmp_StockPredictionHistory.prediction_percent = ((tmpPrediction - tmpClose) / tmpClose) * 100
+                    tmp_StockPredictionHistory.initial_close = tmpClose
 
             except Exception as e:
                 logger.info(f"MainWrapperKR - createStockPredictionHistory; Error happened : {e}")
-                traceback.print_exc()
+                #traceback.print_exc()
+
+        # Bulk update
+        bulk_update(tmpPredictionDayFilter)
 
         # Bulk create
         StockPredictionHistory.objects.bulk_create(
             filter_1
         )
 
-        # Bulk update
-        bulk_update(tmpPredictionDayFilter)
+
 
         logger.info(f"MainWrapperKR - createStockPredictionHistory; Total new objects : {len(filter_1)}")
         logger.info(f"MainWrapperKR - createStockPredictionHistory; Total updated objects : {len(filter_2)}")
@@ -149,14 +167,20 @@ class MainWrapperKR:
                 not isinstance(tmpWindowDF, pd.DataFrame):
             tmpMainDF, tmpPredDF, tmpWindowDF = self.createPredictionPrep(callDate=callDate)
 
+
+
         # Convert object types to numeric
         tmpMainDF['section_integer'] = pd.to_numeric(tmpMainDF['section_integer'], errors='coerce')
         tmpMainDF['total_sum']       = pd.to_numeric(tmpMainDF['total_sum'], errors='coerce')
         tmpMainDF['time_elapsed']    = pd.to_numeric(tmpMainDF['time_elapsed'], errors='coerce')
+        tmpMainDF['market_name']    = pd.to_numeric(tmpMainDF['market_name'], errors='coerce')
+
         tmpPredDF['section_integer'] = pd.to_numeric(tmpPredDF['section_integer'], errors='coerce')
         tmpPredDF['total_sum']       = pd.to_numeric(tmpPredDF['total_sum'], errors='coerce')
         tmpPredDF['time_elapsed']    = pd.to_numeric(tmpPredDF['time_elapsed'], errors='coerce')
+        tmpPredDF['market_name']    = pd.to_numeric(tmpPredDF['market_name'], errors='coerce')
 
+        # Gen data
         # print(f'tmpMainDF')
         # print(f'len(tmpMainDF) : {len(tmpMainDF)}')
         # tmpMainDF.info()
@@ -165,6 +189,28 @@ class MainWrapperKR:
         # print(f'len(tmpPredDF) : {len(tmpPredDF)}')
         # tmpPredDF.info()
         # tmpPredDF.head(3)
+        # #
+        # import pickle, os
+        # from pathlib import Path
+        # root = Path(__file__).resolve().parent.parent.parent.parent
+        # print(f'root : {root}')
+        # with open(
+        #         os.path.join(
+        #             root,
+        #             'testMockData', 'tmpMainDF.p'
+        #         ), 'wb') as f:
+        #     pickle.dump(tmpMainDF, f)
+        #     print(f'successful 1')
+        #
+        #
+        # with open(
+        #         os.path.join(
+        #             root,
+        #             'testMockData', 'tmpPredDF.p'
+        #         ), 'wb') as f:
+        #     pickle.dump(tmpPredDF, f)
+        #     print(f'successful 2')
+
 
         # from Main Dataframe
         X, Y = tmpMainDF.loc[:, :'roe'], tmpMainDF.loc[:, 'answer':'answer']
@@ -175,58 +221,41 @@ class MainWrapperKR:
         """
         Param explained : https://towardsdatascience.com/a-guide-to-xgboost-hyperparameters-87980c7f44a9
         Hyper and more : https://xgboost.readthedocs.io/en/latest/parameter.html
-    
         """
         X_train, X_test, y_train, y_test =  train_test_split(X, Y, test_size=0.2)
-        xgb_model = xgboost.XGBRegressor(n_estimators=100,
-                                         subsample=0.75,
-                                         learning_rate=0.3,
-                                         gamma=0,
-                                         colsample_bytree=1,
-                                         max_depth=10,
-                                         eval_metric="mape")
 
-        # Train Model
-        xgb_model.fit(X_train, y_train)
-
-        # Plot importance
-        # UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
-        # terminating with uncaught exception of type NSException
-        #xgboost.plot_importance(xgb_model)
-
-        # Prediction for test
-        test_predictions = xgb_model.predict(X_test)
-        # Scores
-        # 1)
-        test_score = explained_variance_score(test_predictions, y_test)
-        logger.info(f"MainWrapperKR - createPrediction; Prediction score test : {test_score}")
-        # 2)
-        train_score = xgb_model.score(X_train, y_train)
-        logger.info(f"MainWrapperKR - createPrediction; Prediction score train : {train_score}")
-        # 3)
-        mpe = myMPE(test_predictions, y_test.to_numpy())
-        logger.info(f"MainWrapperKR - createPrediction; Prediction score train/mpe : {mpe}")
-
-        # Prediction for real
-        real_predictions = xgb_model.predict(PX)
-
+        # Build and predict
+        real_predictions = Builder.build(model_type="XGBoost",
+                                         X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test,
+                                         PX=PX
+                                         )
 
         PX_indexTick['prediction'] = real_predictions.tolist()
         PX_indexTick['close'] = PX['close']
+        PX_indexTick['open'] = PX['open']
+        PX_indexTick['gap'] = PX['gap']
+
+        #print(f'PX_indexTick.head(3) : {PX_indexTick.head(3)}')
 
         # get Date
         try:
-            tmplatest = StockItem.objects.filter(
-                Q(stock_name__stock_tick__stock_isInfoAvailable=True)
-            ).order_by('-reg_date').first()
-
-            tmplatestDate = tmplatest.reg_date
-
-            latestDate = datetime.datetime(tmplatestDate.year,
-                                           tmplatestDate.month,
-                                           tmplatestDate.day, hour=CONF.MARKET_TOTAL_FINISH_HOUR)
+            latestDate = callDate
+            # tmplatest = StockItem.objects.filter(
+            #     Q(stock_name__stock_tick__stock_isInfoAvailable=True)
+            # ).order_by('-reg_date').first()
+            #
+            # tmplatestDate = tmplatest.reg_date
+            #
+            # latestDate = datetime.datetime(tmplatestDate.year,
+            #                                tmplatestDate.month,
+            #                                tmplatestDate.day, hour=CONF.MARKET_TOTAL_FINISH_HOUR)
         except: latestDate = datetime.datetime.now()
 
+        # Convert to Numeric
+        PX_indexTick['prediction'] = pd.to_numeric(PX_indexTick['prediction'], errors='coerce')
+        PX_indexTick['close']       = pd.to_numeric(PX_indexTick['close'], errors='coerce')
+        PX_indexTick['open']    = pd.to_numeric(PX_indexTick['open'], errors='coerce')
+        PX_indexTick['gap']    = pd.to_numeric(PX_indexTick['gap'], errors='coerce')
 
         return PX_indexTick, CF.getNextPredictionDate(latestDate)
 
@@ -283,8 +312,8 @@ class MainWrapperKR:
         # startDate = CF.getNextPredictionDate(
         #     callDate - datetime.timedelta(CONF.TOTAL_REQUEST_DATE_LENGTH)
         # )
-        startDate = CF.getStartFetchingDate(callEndDate=callDate)
-        endDate = callDate
+        startDate = CF.getStartFetchingDate(callStartDate=callDate)
+        endDate = CF.getEndFetchingDate(callEndDate=callDate)
 
         if countIndex % 100 == 0:
             logger.info(f"MainWrapperKR - createDataframe : {countIndex}")
@@ -319,25 +348,26 @@ class MainWrapperKR:
                 tmp_regDatetime = datetime.datetime(tmp_regDate.year, tmp_regDate.month, tmp_regDate.day)
                 tmpInsertData = {
                     'section_integer' : int(stockitem.stock_map_section.section_name.section_integer),
-                    'total_sum' : int(stockitem.stock_map_section.total_sum),
+                    'total_sum' : int(stockitem.stock_map_section.total_sum / CONF.STOCK_NUM_NORMALIZER),
                     'time_elapsed' : abs(int((callDate - tmp_regDatetime).days)),
                     'open' : stockitem.open,
                     'high' : stockitem.high,
                     'low' : stockitem.low,
                     'close' : stockitem.close,
+                    'gap' : stockitem.close - stockitem.open,
                     'volume' : stockitem.volume,
                     'div' : stockitem.div,
                     'per' : stockitem.per,
                     'pbr' : stockitem.pbr,
+                    'market_name': CF.getMarketNumber(stockitem.stock_name.stock_tick.stock_marketName),
                     'roe' : stockitem.roe,
-                    'market_name' : CF.getMarketNumber(stockitem.stock_name.stock_tick.stock_marketName),
                     'tick' : str(tick)
                 }
                 if idx == 0:  # first index which needs predictions
                     globalDataframePredictions = globalDataframePredictions.append(
                         tmpInsertData, ignore_index=True
                     )
-                    previousAnswer = stockitem.close
+                    previousAnswer = stockitem.close - stockitem.open
                 # elif idx == 1 and False: # remove data lookahed
                 #     tmpInsertData["answer"] = previousAnswer
                 #     globalDataframeWindow = globalDataframeWindow.append(
@@ -349,7 +379,7 @@ class MainWrapperKR:
                     globalDataframeMain = globalDataframeMain.append(
                         tmpInsertData, ignore_index=True
                     )
-                    previousAnswer = stockitem.close
+                    previousAnswer = stockitem.close - stockitem.open
 
         except Exception as e:
             logger.warning(f"appStockPrediction - MainWrapperKR - createDataframe; {e}")
@@ -357,6 +387,3 @@ class MainWrapperKR:
         finally:
             return globalDataframeMain, globalDataframePredictions, globalDataframeWindow
 
-
-def myMPE( y_pred, y_true):
-    return np.mean((y_true - y_pred) / y_true) * 100
