@@ -23,7 +23,7 @@ docker run  --name StockManager-Django-Server -d -p 5552:5552  \
   -e DB_USERNAME='root' \
   -e DB_PASSWORD='d@12YinYang' \
   -e DEBUG='False' \
-  -v StockManager:./django_home \
+  -v StockManager:/django_home \
   korshika/stockmanager-back-django:latest
 
 
