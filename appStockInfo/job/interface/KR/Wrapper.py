@@ -47,7 +47,7 @@ class MainWrapperKR:
 
         if isDataFetchOn:
             self.stockList.doAction()
-            self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
+            #self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
             # CRUD
             # 1) Create StockTick
@@ -57,6 +57,7 @@ class MainWrapperKR:
             # 2) Create StockItemListName
             self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
             self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
+
 
             # 3) Create StockSection
             self.createStockSection()
@@ -124,7 +125,7 @@ class MainWrapperKR:
 
         query_set = StockItemListName.objects.all()
         exsist_stocktick = query_set.values_list('stock_tick__stock_tick', flat=True)
-        exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="^[a-zA-Z0-9]*$")
+        exist_needsupdate_stocktick = StockItemListName.objects.filter(stock_name__regex="(\D|\w)*") # "^[a-zA-Z0-9]*$"  # "^[a-zA-Z0-9 \(\)]*$"
         create_new_stocktick = set(listStocks) - set(exsist_stocktick)
 
         # create new stock list item, update record
@@ -162,6 +163,7 @@ class MainWrapperKR:
             except:
                 pass
 
+        logger.info(f"MainWrapperKR - createStockItemListName; exist_needsupdate_stocktick length : {len(exist_needsupdate_stocktick)}")
         if exist_needsupdate_stocktick.exists():
             #print(f'len of exists of needsupdate : {len(exist_needsupdate_stocktick)}')
             for stock_item in exist_needsupdate_stocktick:
@@ -175,6 +177,7 @@ class MainWrapperKR:
         # create
         StockTick.objects.bulk_create(filter_1)
         StockItemListName.objects.bulk_create(filter_2)
+        logger.info(f"MainWrapperKR - createStockItemListName; new stock name created length : {len(filter_2)}")
 
 
     def createStockSection(self):
