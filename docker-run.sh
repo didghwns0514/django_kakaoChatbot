@@ -30,6 +30,7 @@ docker run  --name StockManager-Django-Server1 -d -p 5550:5552  \
   --ip=172.22.0.6 \
   korshika/stockmanager-back-django:latest
 #-v StockManager:/usr/src/app/staticfiles \
+# -> static files served from Main server
 
 # Main and no data gen
 docker run  --name StockManager-Django-Server2 -d -p 5551:5552  \
