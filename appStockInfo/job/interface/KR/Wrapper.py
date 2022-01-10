@@ -47,7 +47,7 @@ class MainWrapperKR:
 
         if isDataFetchOn:
             self.stockList.doAction()
-            #self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
+            self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
             # CRUD
             # 1) Create StockTick
@@ -740,7 +740,9 @@ def FinaceInformation(market=None, timeoutSeconds=2):
 
     tmpData = sector_KS.append(sector_KQ)
     if isinstance(tmpData, pd.DataFrame) and '업종명' in tmpData:
-        logger.info("FinaceInformation - Dataframe is obtained")
+        logger.critical("FinaceInformation - Dataframe is obtained")
+    else:
+        logger.critical("FinaceInformation - Dataframe is not obtained")
     return tmpData
 
 
