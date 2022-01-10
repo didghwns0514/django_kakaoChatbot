@@ -22,7 +22,7 @@ class GetStockListTest(TestCase):
 
         self.assertGreater(len(totalList), 2000)
 
-    @unittest.skip
+    #@unittest.skip
     def test_getTickerNameKOSDAQ(self):
         stockList = GetStockList()
         stockList.doAction()

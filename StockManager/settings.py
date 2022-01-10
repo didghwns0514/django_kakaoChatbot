@@ -32,7 +32,8 @@ ALLOWED_HOSTS = ['hjyang.iptime.org',
                  'localhost',
                  # Data
                  'http://data.krx.co.kr/',
-                 '*'
+                 '*',
+                 'django' # proxy for nginx
                  ]
 
 
