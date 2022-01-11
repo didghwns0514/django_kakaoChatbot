@@ -28,11 +28,13 @@ logger = logging.getLogger('my')
 def message_getStock20(request, paramNum=20):
     logger.info(f"appRestAPI - message_getStock20")
     print(f'called!!')
+
     answer = ((request.body).decode('utf-8'))
     return_json_str = json.loads(answer)
     return_str = return_json_str['userRequest']['utterance']  # 입력 텍스트 알맹이
     print(f'return_json_str : {return_json_str}')
     print(f'return_str : {return_str}')
+
 
 
     # @ Query performed
@@ -49,7 +51,7 @@ def message_getStock20(request, paramNum=20):
         logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
 
         reply1 = {
-            'version': "2.0",
+            "version": "2.0",
             "template": {
                 "outputs": [
                     {
@@ -58,7 +60,8 @@ def message_getStock20(request, paramNum=20):
                             "items" : [
 
                             ],
-                            "buttons": [{
+                            "buttons": [
+                                {
                                 "label": "네이버 금융",
                                 "action": "webLink",
                                 "webLinkUrl": "https://finance.naver.com/"
@@ -83,6 +86,7 @@ def message_getStock20(request, paramNum=20):
                     "web": "https://finance.naver.com/item/main.naver?code=" + tmpStockCode
                 }
             })
+
 
         return JsonResponse(reply1)
 
