@@ -47,6 +47,87 @@ def message_getStock20(request, paramNum=20):
 
     if django_filterd:  # ORM exists
         logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
+
+        reply1 = {
+            'version': "2.0",
+            "template": {
+                "outputs": [
+                    {
+                        "listCard": {
+                            "header": {"title": "챗봇 관리자센터를 소개합니다."},
+                            "items" : [
+
+                            ],
+                            "buttons": [{
+                                "label": "네이버 금융",
+                                "action": "webLink",
+                                "webLinkUrl": "https://finance.naver.com/"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+
+        for data in django_filterd:
+            tmpStockName = str(data.stock_name)
+            tmpStockCode = str(data.stock_tick)
+            tmpStockPrediction = float(data.prediction)
+
+            reply1['template']['outputs'][0]['listCard']['items'].append({
+                "title": tmpStockName  +  "  :  " + tmpStockCode,
+                "description": f"{'%.3f' % tmpStockPrediction}" + " 상승 기대",
+                "imageUrl":"https://ssl.pstatic.net/imgfinance/chart/item/area/day/" + tmpStockCode + ".png",
+                "link":{
+                    "web": "https://finance.naver.com/item/main.naver?code=" + tmpStockCode
+                }
+            })
+
+        return JsonResponse(reply1)
+
+
+    else:
+        logger.info(f"appRestAPI - message_getStock20; No ORM result")
+        return JsonResponse({
+            'version': "2.0",
+            'template': {
+                'outputs': [{
+                    'simpleText': {
+                        'text': "추천할 종목이 없습니다..."
+                    }
+                }],
+                'quickReplies': [{
+                    'label': '처음으로',
+                    'action': 'message',
+                    'messageText': '처음으로'
+                }]
+            }
+        })
+
+@csrf_exempt
+def message_getStock20_2(request, paramNum=20):
+    logger.info(f"appRestAPI - message_getStock20")
+    print(f'called!!')
+    answer = ((request.body).decode('utf-8'))
+    return_json_str = json.loads(answer)
+    return_str = return_json_str['userRequest']['utterance']  # 입력 텍스트 알맹이
+    print(f'return_json_str : {return_json_str}')
+    print(f'return_str : {return_str}')
+
+
+    # @ Query performed
+    normDate = CF.getNextPredictionDate(datetime.now())
+    print(f'normDate : {normDate}')
+    djangoORM = StockPredictionHistory.objects.filter(
+        Q(prediction_time__gte=normDate)
+    ).order_by('-prediction')  # 내림차순 ,desc order
+    django_filterd = [data for n, data in enumerate(djangoORM)
+                      if n <= paramNum if data.prediction > 0  # check price ratio constraints
+                    ]
+
+    if django_filterd:  # ORM exists
+        logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
         tmpString = '기업  /  종목번호  /  예상 상승폭\n'
         for data in django_filterd:
             tmpString +=  f"{str(data.stock_name).ljust(11)} -  {str(data.stock_tick)} -> {'%.3f' % float(data.prediction)}\n\n"
