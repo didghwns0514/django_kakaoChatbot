@@ -12,7 +12,7 @@ pip install -r requirements.txt
 #python3 manage.py migrate
 
 # for static files & whitenoise
-mkdir static
+# mkdir static
 mkdir staticfiles
 mkdir logs
-mkdir templates
+# mkdir templates
