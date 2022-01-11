@@ -69,8 +69,23 @@ def message_getStock20(request, paramNum=20):
                                 }
                             ]
                         }
+
                     }
+                ],
+
+                "quickReplies": [
+                    {
+                        'label': '처음으로',
+                        'action': 'message',
+                        'messageText': '처음으로'
+                    },
+                    {
+                        'label': str(normDate.strftime("%Y-%m-%d")) + " 예측",
+                        'action': 'message',
+                        'messageText': '처음으로'
+                    },
                 ]
+            #####
             }
         }
 
