@@ -9,7 +9,7 @@
 /.env
 .static_root/
 /logs/
-/templates/
+#/templates/
 /staticfiles/
 /static/
 /appStockPrediction/testFolders/result_XGBoost/

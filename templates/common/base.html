@@ -1,0 +1,14 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'common/css/style.css' %}">
+
+<!DOCTYPE html>
+<html>
+{% include 'common/head.html' %}
+    <body>
+    {% block content %}
+
+    {% endblock %}
+    </body>
+{% include 'common/footer.html' %}
+</html>

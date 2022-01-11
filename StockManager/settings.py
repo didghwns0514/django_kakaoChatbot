@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'log_viewer', # Viewer for logs
     'bootstrap4',
     'rangefilter',
+    #'tailwind', 'theme',
 
     # my apps
     'appStockInfo',
@@ -62,10 +63,14 @@ INSTALLED_APPS = [
     'appStockAccount'
 ]
 
+# Custom user model
+AUTH_USER_MODEL = 'appStockAccount.User'
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -176,8 +181,15 @@ SCHEDULER_DEFAULT = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
-
+# https://query.tistory.com/entry/Dj-%EC%9E%A5%EA%B3%A0-%EB%8B%A4%EA%B5%AD%EC%96%B4-%EC%A7%80%EC%9B%90-%EC%82%AC%EC%9A%A9%EB%B2%95-i18n
 LANGUAGE_CODE = 'ko'
+LANGUAGES = [        # 사용하고자 하는 언어를 모두 적어줍니다.
+    ('ko', 'Korean'),
+    ('en-us', 'English'),
+]
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
+
+
 
 TIME_ZONE = 'Asia/Seoul'
 

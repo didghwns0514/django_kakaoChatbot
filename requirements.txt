@@ -31,7 +31,6 @@ django-filter==21.1
 django-log-viewer==1.1.4
 django-rest-swagger==2.1.2
 django-slowtests==1.1.1
-django-tailwind==3.0.1
 djangorestframework==3.12.4
 finance-datareader==0.9.31
 fonttools==4.28.5
