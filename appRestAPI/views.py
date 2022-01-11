@@ -54,7 +54,7 @@ def message_getStock20(request, paramNum=20):
                 "outputs": [
                     {
                         "listCard": {
-                            "header": {"title": "챗봇 관리자센터를 소개합니다."},
+                            "header": {"title": "주식가 예측 테이블"},
                             "items" : [
 
                             ],
