@@ -47,10 +47,9 @@ def message_getStock20(request, paramNum=20):
 
     if django_filterd:  # ORM exists
         logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
-        tmpString = ''
+        tmpString = '기업  /  종목번호  /  예상 상승폭\n'
         for data in django_filterd:
-            tmpString +=  f"{str(data.stock_name).ljust(11)} - " \
-                          f"{str(data.stock_tick)} -> {'%.3f' % float(data.prediction)}\n\n"
+            tmpString +=  f"{str(data.stock_name).ljust(11)} -  {str(data.stock_tick)} -> {'%.3f' % float(data.prediction)}\n\n"
         str([(data.stock_name, data.prediction) for data in django_filterd])
         return JsonResponse({
             'version': "2.0",

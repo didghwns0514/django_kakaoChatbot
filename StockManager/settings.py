@@ -76,7 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware'
+    #'whitenoise.middleware.WhiteNoiseMiddleware'
 
 ]
 
@@ -88,7 +88,8 @@ TEMPLATES = [
         'DIRS': [
             # BASE_DIR / 'templates'
             # os.path.join(BASE_DIR, 'templates')
-            os.path.join(BASE_DIR, 'static' , 'templates')
+            os.path.join(BASE_DIR, 'static' , 'templates'),
+            os.path.join(BASE_DIR, 'staticfiles' , 'templates')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
