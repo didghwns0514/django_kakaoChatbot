@@ -43,12 +43,17 @@ def message_getStock20(request, paramNum=20):
                     ]
 
     if django_filterd:  # ORM exists
+        tmpString = ''
+        for data in django_filterd:
+            tmpString +=  f"{('%10s' % str(data.stock_name))} - " \
+                          f"{str(data.stock_tick)} -> {'%.3f' % float(data.prediction)}\n"
+        str([(data.stock_name, data.prediction) for data in django_filterd])
         return JsonResponse({
             'version': "2.0",
             'template': {
                 'outputs': [{
                     'simpleText': {
-                        'text': f'{str([(data.stock_name__stock_name, data.price_ratio) for data in django_filterd])}'
+                        'text': tmpString
                     }
                 }],
                 'quickReplies': [{
