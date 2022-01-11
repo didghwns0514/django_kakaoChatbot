@@ -11,5 +11,5 @@
 /logs/
 #/templates/
 /staticfiles/
-/static/
+#/static/
 /appStockPrediction/testFolders/result_XGBoost/

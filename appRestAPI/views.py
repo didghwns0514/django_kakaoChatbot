@@ -21,9 +21,12 @@ from django.db.models import Q
 
 import CommonFunction as CF
 
+import logging
+logger = logging.getLogger('my')
 
 @csrf_exempt
 def message_getStock20(request, paramNum=20):
+    logger.info(f"appRestAPI - message_getStock20")
     print(f'called!!')
     answer = ((request.body).decode('utf-8'))
     return_json_str = json.loads(answer)
@@ -43,6 +46,7 @@ def message_getStock20(request, paramNum=20):
                     ]
 
     if django_filterd:  # ORM exists
+        logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
         tmpString = ''
         for data in django_filterd:
             tmpString +=  f"{('%10s' % str(data.stock_name))} - " \
@@ -64,6 +68,7 @@ def message_getStock20(request, paramNum=20):
             }
         })
     else:
+        logger.info(f"appRestAPI - message_getStock20; No ORM result")
         return JsonResponse({
             'version': "2.0",
             'template': {
