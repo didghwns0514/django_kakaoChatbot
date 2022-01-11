@@ -9,6 +9,7 @@ from django.views.decorators.csrf import \
 from django.utils.decorators import method_decorator
 
 import json
+import copy
 
 from django.shortcuts import render
 from django.views.generic import TemplateView
@@ -50,14 +51,14 @@ def message_getStock20(request, paramNum=20):
     if django_filterd:  # ORM exists
         logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
 
-        reply1 = {
+        replytemplate = {
             "version": "2.0",
             "template": {
                 "outputs": [
                     {
-                        "listCard": {
-                            "header": {"title": "주식가 예측 테이블"},
-                            "items" : [
+                        "carousel": {
+                            "type":"listCard",
+                            "items":[
 
                             ],
                             "buttons": [
@@ -73,12 +74,25 @@ def message_getStock20(request, paramNum=20):
             }
         }
 
-        for data in django_filterd:
+        tmp_replySub = {
+
+                "header" : {"title": "주식 예측 테이블"},
+                "items" : []
+            }
+
+
+        tmp_sub = copy.deepcopy(tmp_replySub)
+        for idx, data in enumerate(django_filterd):
+            if idx % 4 == 0:
+                if idx != 0:
+                    replytemplate["template"]["outputs"][0]["carousel"]["items"].append(tmp_sub)
+                tmp_sub = copy.deepcopy(tmp_replySub)
+
             tmpStockName = str(data.stock_name)
             tmpStockCode = str(data.stock_tick)
             tmpStockPrediction = float(data.prediction)
 
-            reply1['template']['outputs'][0]['listCard']['items'].append({
+            tmp_sub["items"].append({
                 "title": tmpStockName  +  "  :  " + tmpStockCode,
                 "description": f"{'%.3f' % tmpStockPrediction}" + " 상승 기대",
                 "imageUrl":"https://ssl.pstatic.net/imgfinance/chart/item/area/day/" + tmpStockCode + ".png",
@@ -88,7 +102,7 @@ def message_getStock20(request, paramNum=20):
             })
 
 
-        return JsonResponse(reply1)
+        return JsonResponse(replytemplate)
 
 
     else:
