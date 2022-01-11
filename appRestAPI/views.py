@@ -49,8 +49,8 @@ def message_getStock20(request, paramNum=20):
         logger.info(f"appRestAPI - message_getStock20; Exists ORM result")
         tmpString = ''
         for data in django_filterd:
-            tmpString +=  f"{('%10s' % str(data.stock_name))} - " \
-                          f"{str(data.stock_tick)} -> {'%.3f' % float(data.prediction)}\n"
+            tmpString +=  f"{str(data.stock_name).ljust(11)} - " \
+                          f"{str(data.stock_tick)} -> {'%.3f' % float(data.prediction)}\n\n"
         str([(data.stock_name, data.prediction) for data in django_filterd])
         return JsonResponse({
             'version': "2.0",
