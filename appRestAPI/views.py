@@ -25,6 +25,109 @@ import CommonFunction as CF
 import logging
 logger = logging.getLogger('my')
 
+
+@csrf_exempt
+def message_lookup(request):
+    logger.info(f"appRestAPI - message_lookup")
+    answer = ((request.body).decode('utf-8'))
+    return_json_str = json.loads(answer)
+    utterance = return_json_str['userRequest']['utterance']  # 입력 텍스트 알맹이
+    userID = return_json_str['userRequest']['user']['id']  # 입력 텍스트 알맹이
+    return_param = return_json_str['action']['detailParams']['종목']["origin"]
+
+    print(f'answer : {answer}')
+    print(f'return_json_str : {return_json_str}')
+    print(f'utterance : {utterance}')
+    print(f'return_param : {return_param}')
+
+    isSuccess = True
+    normDate = CF.getNextPredictionDate(datetime.now())
+    print(f'normDate : {normDate}')
+
+    if return_param.startswith("종목 "):
+        tmpStockName = return_param.replace("종목 ","").strip()
+        tmpQuery = StockPredictionHistory.objects.filter(
+              (Q(stock_name__stock_name=tmpStockName) | Q(stock_tick__stock_tick=tmpStockName) )
+            & Q(prediction_time=normDate)
+        )
+
+        try:
+            if tmpQuery.exists():
+                tmpResult = tmpQuery.first()
+
+                tmpStockName = str(tmpResult.stock_name.stock_name)
+                tmpStockCode = str(tmpResult.stock_tick.stock_tick)
+                tmpRise = float(tmpResult.value)
+                tmpPredict = float(tmpResult.prediction)
+
+                return JsonResponse({
+                    "version": "2.0",
+                    "template": {
+                        "outputs": [
+                            {
+                                "simpleText": {
+                                    "text": "조회를 성공하였습니다. 결과는 다음과 같습니다."
+                                }
+                            },
+                            {
+                                "carousel": {
+                                    "type": "itemCard",
+                                    "items": [
+                                        {
+                                            "imageTitle": {
+                                                "title": tmpStockName + " : " + tmpStockCode,
+                                                "imageUrl": "https://ssl.pstatic.net/imgfinance/chart/item/area/day/" + tmpStockCode + ".png"
+                                            },
+                                            "itemList": [
+                                                {
+                                                    "title": f"{'%.3f' % tmpPredict}" + "% 변화",
+                                                    "description": str(round(tmpRise)) + " 만큼 변동"
+                                                }
+                                            ],
+                                            "itemListAlignment": "left",
+                                            "buttons": [
+                                                {
+                                                    "label": "네이버 금융 종목 링크",
+                                                    "action": "webLink",
+                                                    "webLinkUrl": "https://finance.naver.com/item/main.naver?code=" + tmpStockCode
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "quickReplies": [
+                            {
+                                "messageText": "처음으로",
+                                "action": "message",
+                                "label": "처음으로"
+                            },
+                            {
+                                'label': str(normDate.strftime("%Y-%m-%d")) + " 예측",
+                                'action': 'message',
+                                'messageText': '처음으로'
+                            },
+                        ]
+                    }
+                })
+        except Exception as e:
+            print(f'error happened! : {e}')
+
+    return JsonResponse({
+        "version": "2.0",
+        "template": {
+            "outputs": [
+                {
+                    "simpleText": {
+                        "text": "조회 종목 및 코드를 제대로 입력하지 않았거나 없는 코드입니다. 다시 시도해주세요. "
+                    }
+                },]
+            }
+        }
+    )
+
+
 @csrf_exempt
 def message_getStock20(request, paramNum=20):
     logger.info(f"appRestAPI - message_getStock20")
@@ -109,7 +212,7 @@ def message_getStock20(request, paramNum=20):
 
             tmp_sub["items"].append({
                 "title": tmpStockName  +  "  :  " + tmpStockCode,
-                "description": f"{'%.3f' % tmpStockPrediction}" + " 상승 기대",
+                "description": f"{'%.3f' % tmpStockPrediction}" + "% 상승 기대",
                 "imageUrl":"https://ssl.pstatic.net/imgfinance/chart/item/area/day/" + tmpStockCode + ".png",
                 "link":{
                     "web": "https://finance.naver.com/item/main.naver?code=" + tmpStockCode
