@@ -88,8 +88,9 @@ TEMPLATES = [
         'DIRS': [
             # BASE_DIR / 'templates'
             # os.path.join(BASE_DIR, 'templates')
-            os.path.join(BASE_DIR, 'static' , 'templates'),
-            os.path.join(BASE_DIR, 'staticfiles' , 'templates')
+            #
+            os.path.join(BASE_DIR, 'staticfiles' , 'templates'),
+            os.path.join(BASE_DIR, 'static' , 'templates')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
