@@ -14,8 +14,8 @@ from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-#BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #ROOT_DIR = os.path.dirname(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
@@ -78,7 +78,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware'
+    #'whitenoise.middleware.WhiteNoiseMiddleware'
 
 ]
 
@@ -88,11 +88,12 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            # BASE_DIR / 'templates'
-            # os.path.join(BASE_DIR, 'templates')
-            #
-            os.path.join(BASE_DIR, 'staticfiles' , 'templates'),
-            os.path.join(BASE_DIR, 'static' , 'templates')
+                    # BASE_DIR / 'templates'
+                    os.path.join(BASE_DIR, 'templates'),
+                    #
+                    # os.path.join(BASE_DIR, 'templates'),
+                    # os.path.join(BASE_DIR, 'staticfiles' , 'templates'),
+                    # os.path.join(BASE_DIR, 'static' , 'templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -209,10 +210,11 @@ USE_TZ =  False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 # https://listed.to/@toolate/6967/heroku-x-django-static
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'staticfiles'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 #STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -267,7 +269,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filters': ['require_debug_false'],
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs/mysite.log',
+            'filename': os.path.join(BASE_DIR, 'logs/mysite.log'),
             'maxBytes': 1024*1024*5,  # 5 MB
             'backupCount': 5,
             'formatter': 'standard',
@@ -277,7 +279,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filters': ['require_debug_false'],
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs/appStockInfo.log',
+            'filename': os.path.join(BASE_DIR, 'logs/appStockInfo.log'),
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
             'formatter': 'standard',
@@ -287,7 +289,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filters': ['require_debug_false'],
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs/appStockPrediction.log',
+            'filename': os.path.join(BASE_DIR, 'logs/appStockPrediction.log'),
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
             'formatter': 'standard',
@@ -319,7 +321,7 @@ LOGGING = {
 }
 LOG_VIEWER_FILES = ['mysite']
 LOG_VIEWER_FILES_PATTERN = '*.log'
-LOG_VIEWER_FILES_DIR = BASE_DIR / 'logs/'
+LOG_VIEWER_FILES_DIR = os.path.join(BASE_DIR, 'logs/')
 #-------------
 LOG_VIEWER_PAGE_LENGTH = 25       # total log lines per-page
 LOG_VIEWER_MAX_READ_LINES = 1000  # total log lines will be read
