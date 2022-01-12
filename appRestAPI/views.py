@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from appStockPrediction.models import StockPredictionHistory
+import CommonFunction as CF
 
 # Create your views here.
 from django.http import HttpResponse
@@ -7,20 +8,14 @@ from django.views.decorators.csrf import csrf_exempt  # block CSRF attacks
 from django.views.decorators.csrf import \
     ensure_csrf_cookie  # https://stackoverflow.com/questions/19598993/csrf-cookie-not-set-django-verification-failed
 from django.utils.decorators import method_decorator
+from django.shortcuts import render
+from django.views.generic import TemplateView
+from django.db.models import Q
 
 import json
 import copy
-
-from django.shortcuts import render
-from django.views.generic import TemplateView
-
 import decimal
 from datetime import datetime, timedelta
-
-from appStockPrediction.models import StockPredictionHistory
-from django.db.models import Q
-
-import CommonFunction as CF
 
 import logging
 logger = logging.getLogger('my')
