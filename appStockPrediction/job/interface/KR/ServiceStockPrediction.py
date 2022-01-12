@@ -1,5 +1,7 @@
 import traceback
+import StockManager.subSettings as CONFI
 
+from django.db.models import Count
 from django.db.models.query import QuerySet, Q, F
 from bulk_update.helper import bulk_update
 from appStockInfo.models import (
@@ -181,35 +183,37 @@ class MainWrapperKR:
         tmpPredDF['market_name']    = pd.to_numeric(tmpPredDF['market_name'], errors='coerce')
 
         # Gen data
-        # print(f'tmpMainDF')
-        # print(f'len(tmpMainDF) : {len(tmpMainDF)}')
-        # tmpMainDF.info()
-        # tmpMainDF.head(3)
-        # print(f'tmpPredDF')
-        # print(f'len(tmpPredDF) : {len(tmpPredDF)}')
-        # tmpPredDF.info()
-        # tmpPredDF.head(3)
-        # #
-        # import pickle, os
-        # from pathlib import Path
-        # root = Path(__file__).resolve().parent.parent.parent.parent
-        # print(f'root : {root}')
-        # with open(
-        #         os.path.join(
-        #             root,
-        #             'testMockData', 'tmpMainDF.p'
-        #         ), 'wb') as f:
-        #     pickle.dump(tmpMainDF, f)
-        #     print(f'successful 1')
-        #
-        #
-        # with open(
-        #         os.path.join(
-        #             root,
-        #             'testMockData', 'tmpPredDF.p'
-        #         ), 'wb') as f:
-        #     pickle.dump(tmpPredDF, f)
-        #     print(f'successful 2')
+        if not CONFI.IS_MAIN_SERVER:
+            if CONFI.DEBUG:
+                print(f'tmpMainDF')
+                print(f'len(tmpMainDF) : {len(tmpMainDF)}')
+                tmpMainDF.info()
+                tmpMainDF.head(3)
+                print(f'tmpPredDF')
+                print(f'len(tmpPredDF) : {len(tmpPredDF)}')
+                tmpPredDF.info()
+                tmpPredDF.head(3)
+                #
+                import pickle, os
+                from pathlib import Path
+                root = Path(__file__).resolve().parent.parent.parent.parent
+                print(f'root : {root}')
+                with open(
+                        os.path.join(
+                            root,
+                            'testMockData', 'tmpMainDF.p'
+                        ), 'wb') as f:
+                    pickle.dump(tmpMainDF, f)
+                    print(f'successful 1')
+
+
+                with open(
+                        os.path.join(
+                            root,
+                            'testMockData', 'tmpPredDF.p'
+                        ), 'wb') as f:
+                    pickle.dump(tmpPredDF, f)
+                    print(f'successful 2')
 
 
         # from Main Dataframe
@@ -320,8 +324,15 @@ class MainWrapperKR:
             logger.info(f"MainWrapperKR - createDataframe; start:{startDate}, end:{endDate}")
 
         try:
+            tmpStockTicksByVolumeFilter = (all_Stockitems.order_by('-volume')
+                                 .values_list('stock_name__stock_tick__stock_tick', flat=True)
+                                 .distinct()
+                               ) # 한번이라도 상위에 들은 거래량인 경우 -> CONF.TOP_VOULME_FILTER
             tmpQuery = all_Stockitems.filter(
-                Q(stock_name__stock_tick__stock_tick=tick)
+                Q(stock_name__stock_tick__stock_tick__in=tmpStockTicksByVolumeFilter[:int(
+                                                            len(tmpStockTicksByVolumeFilter)*CONF.TOP_VOULME_FILTER
+                )])
+              & Q(stock_name__stock_tick__stock_tick=tick)
               & Q(reg_date__range=(startDate, endDate)) # get only needed dates
               & (
                     ~(    # Remove unwanted (거래 중지)
