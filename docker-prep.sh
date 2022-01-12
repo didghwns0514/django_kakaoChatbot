@@ -13,6 +13,6 @@ pip install -r requirements.txt
 
 # for static files & whitenoise
 # mkdir static
-mkdir staticfiles
-mkdir logs
+mkdir -p staticfiles || true
+mkdir -p logs || true
 # mkdir templates

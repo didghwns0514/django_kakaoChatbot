@@ -33,7 +33,9 @@ ALLOWED_HOSTS = ['hjyang.iptime.org',
                  # Data
                  'http://data.krx.co.kr/',
                  '*',
-                 'django' # proxy for nginx
+                 'django', # proxy for nginx
+                 'http://stockmanager.site',
+                 'stockmanager.site'
                  ]
 
 
@@ -47,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_apscheduler',
-    #'corsheaders',
+    'corsheaders',
     'rest_framework', # DRF를 앱으로 등록
     'rest_framework_swagger',
     'rest_framework.authtoken',
@@ -76,7 +78,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'whitenoise.middleware.WhiteNoiseMiddleware'
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 
 ]
 
@@ -154,6 +156,7 @@ CORS_ORIGIN_WHITELIST = [
                          'http://localhost:5552',
                          'http://hjyang.iptime.org',
                          'http://hjyang.iptime.org:4441',
+                         'http://stockmanager.site',
                          # Data
                          'http://data.krx.co.kr',
                          ]

@@ -13,6 +13,8 @@ MARKET_TOTAL_FINISH_HOUR = 17
 
 # Total Stock Nums Normalizer value
 STOCK_NUM_NORMALIZER = 10**7
+# Total volume filter by Stock
+TOP_VOULME_FILTER = 0.25
 
 # Dataframe columns
 DATAFRAME_COLUMN_NAMES = [
