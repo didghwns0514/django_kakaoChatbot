@@ -35,12 +35,17 @@ class MainWrapperKR:
 
     def __init__(self):pass
 
-    def doAction(self, isCallCurrentDatetime:bool=True):
+    def doAction(self,
+                 krbottomline=CONF.KR_BOTTOMLINE,
+                 krvolumefilter=CONF.KR_TOP_VOLUME_FILTER,
+                 calledDatetime=datetime.datetime.now(),
+                 isCallCurrentDatetime:bool=True,
+                 ):
         logger.info("MainWrapperKR - doAction")
 
         if isCallCurrentDatetime:
-            self.deleteStockPredictionHistory(datetime.datetime.now())
-            self.createStockPredictionHistory(datetime.datetime.now())
+            self.deleteStockPredictionHistory(calledDatetime)
+            self.createStockPredictionHistory(calledDatetime, krbottomline=krbottomline, krvolumefilter=krvolumefilter)
         else:
             self.deleteStockPredictionHistory(datetime.datetime(2022,1,7,10))
             self.createStockPredictionHistory(datetime.datetime(2022,1,7,10))
@@ -61,13 +66,19 @@ class MainWrapperKR:
         tmpQuery.delete()
 
 
-    def createStockPredictionHistory(self, callDate:datetime.datetime):
+    def createStockPredictionHistory(self, callDate:datetime.datetime,
+                                     krbottomline=CONF.KR_BOTTOMLINE,
+                                     krvolumefilter=CONF.KR_TOP_VOLUME_FILTER
+                                     ):
         """
         StockPrediction CRUD
         """
         logger.info("MainWrapperKR - createStockPredictionHistory")
 
-        predictionDF, predictionDay = self.createPrediction(callDate=callDate)
+        predictionDF, predictionDay = self.createPrediction(callDate=callDate,
+                                                            krbottomline=krbottomline,
+                                                            krvolumefilter=krvolumefilter
+                                                            )
         # print(f'predictionDF.head(3) : {predictionDF.head(3)}')
 
 
@@ -151,7 +162,9 @@ class MainWrapperKR:
 
     def createPrediction(self,
                          callDate:datetime.datetime,
-                         tmpMainDF=None,tmpPredDF=None,tmpWindowDF=None
+                         tmpMainDF=None,tmpPredDF=None,tmpWindowDF=None,
+                         krbottomline=CONF.KR_BOTTOMLINE,
+                         krvolumefilter=CONF.KR_TOP_VOLUME_FILTER
                          ) -> [pd.DataFrame, datetime.datetime]:
         """
         train XGBoost and return Result
@@ -167,7 +180,11 @@ class MainWrapperKR:
         if not isinstance(tmpMainDF,pd.DataFrame) or \
                 not isinstance(tmpPredDF, pd.DataFrame) or \
                 not isinstance(tmpWindowDF, pd.DataFrame):
-            tmpMainDF, tmpPredDF, tmpWindowDF = self.createPredictionPrep(callDate=callDate)
+            tmpMainDF, tmpPredDF, tmpWindowDF = self.createPredictionPrep(
+                                                        callDate=callDate,
+                                                        krbottomline=krbottomline,
+                                                        krvolumefilter=krvolumefilter
+                                                    )
 
 
 
@@ -264,7 +281,11 @@ class MainWrapperKR:
         return PX_indexTick, CF.getNextPredictionDate(latestDate)
 
 
-    def createPredictionPrep(self, callDate:datetime.datetime) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def createPredictionPrep(self,
+                             callDate:datetime.datetime,
+                             krbottomline=CONF.KR_BOTTOMLINE,
+                             krvolumefilter=CONF.KR_TOP_VOLUME_FILTER
+                             ) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         create Dataframe and returns total stock dataframe
         for XGBoost prediction
@@ -290,7 +311,10 @@ class MainWrapperKR:
             tmpMain, tmpPrediction, tmpWindow = self.createDataframe(tick,
                                                           all_Stockitems=all_Stockitems,
                                                           callDate=globalDate,
-                                                          countIndex=idx)
+                                                          countIndex=idx,
+                                                          krbottomline=krbottomline,
+                                                          krvolumefilter=krvolumefilter
+                                                        )
             globalDataframeMain = pd.concat([
                 globalDataframeMain, tmpMain
             ])
@@ -304,10 +328,14 @@ class MainWrapperKR:
         return globalDataframeMain, globalDataframePredictions, globalDataframeWindow
 
 
-    def createDataframe(self, tick,
+    def createDataframe(self,
+                        tick,
                         all_Stockitems:QuerySet,
                         callDate:datetime.datetime,
-                        countIndex=0) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+                        countIndex=0,
+                        krbottomline=CONF.KR_BOTTOMLINE,
+                        krvolumefilter=CONF.KR_TOP_VOLUME_FILTER,
+                        ) -> [pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
         globalDataframeMain = CF.generateEmptyDataframe("Main")
         globalDataframePredictions = CF.generateEmptyDataframe("Prediction")
@@ -327,10 +355,10 @@ class MainWrapperKR:
             tmpStockTicksByVolumeFilter = (all_Stockitems.order_by('-volume')
                                  .values_list('stock_name__stock_tick__stock_tick', flat=True)
                                  .distinct()
-                               ) # 한번이라도 상위에 들은 거래량인 경우 -> CONF.TOP_VOULME_FILTER
+                               ) # 한번이라도 상위에 들은 거래량인 경우 -> CONF.KR_TOP_VOLUME_FILTER
             tmpQuery = all_Stockitems.filter(
                 Q(stock_name__stock_tick__stock_tick__in=tmpStockTicksByVolumeFilter[:int(
-                                                            len(tmpStockTicksByVolumeFilter)*CONF.TOP_VOULME_FILTER
+                                                            len(tmpStockTicksByVolumeFilter)*krvolumefilter
                 )])
               & Q(stock_name__stock_tick__stock_tick=tick)
               & Q(reg_date__range=(startDate, endDate)) # get only needed dates
@@ -343,7 +371,7 @@ class MainWrapperKR:
                       )
                  )
               & (
-                    Q(close__gte=CONF.KR_BOTTOMLINE) # applies only for first object
+                    Q(close__gte=krbottomline) # applies only for first object
                 )
             ).order_by('-reg_date')
 

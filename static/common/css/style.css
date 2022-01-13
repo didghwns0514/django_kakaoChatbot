@@ -1,7 +1,18 @@
 {% load static %}
-/*<link rel="stylesheet" href="{% static 'common/css/reset.css' %}">*/
+
+/* Basic */
 @import url('reset.css');
+@import url('variable.css');
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100&display=swap");
+
+/* Component */
+@import url("footer.css");
+@import url("header.css");
+@import url('navigation.css');
+
+
+/* Screens */
+@import url("../../_css/appStockAccount/SignUp.css");
 
 html {
   font-size: 62.5%;
