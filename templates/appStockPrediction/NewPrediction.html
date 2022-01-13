@@ -1,0 +1,41 @@
+{% extends 'common/base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+<!-- head 부분 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- body 부분 -->
+<script type="text/javascript">
+$('#submit').on('click', function(e) {
+    data = $('#text').val();
+    $.ajax({
+        type:'POST',
+        url:'http://hjyang.iptime.org:4000/appStockPrediction/newPredictionKR',
+        data:JSON.stringify(data),
+        success:function(json){
+            console.log("data pass success",json);
+        },
+        error : function(xhr,errmsg,err) {
+        console.log(xhr.status + ": " + xhr.responseText);
+        }
+   });
+  });
+</script>
+
+<div>
+  <form method="post">
+    {% csrf_token %} }
+    {% bootstrap_form boardForm %}
+    <label title="datetime : ">
+      <input type="datetime-local" name="datetime-local"/>
+    </label>
+    <label title="">
+      <input type="radio" name="radio1" value=""/>
+    </label>
+    <button type="submit" class="btn btn-primary">POST</button>
+  </form>
+
+  <h2>{{ post }}</h2>
+
+</div>
