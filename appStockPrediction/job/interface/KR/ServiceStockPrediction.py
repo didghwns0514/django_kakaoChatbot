@@ -306,6 +306,7 @@ class MainWrapperKR:
         exist_stocktick = StockTick.objects.filter(
             stock_isInfoAvailable=True
         )
+        logger.info(f"MainWrapperKR - createPredictionPrep; len exist_stocktick : {len(exist_stocktick)}")
 
         for idx, tick in enumerate(exist_stocktick):
             tmpMain, tmpPrediction, tmpWindow = self.createDataframe(tick,
@@ -344,7 +345,7 @@ class MainWrapperKR:
         # startDate = CF.getNextPredictionDate(
         #     callDate - datetime.timedelta(CONF.TOTAL_REQUEST_DATE_LENGTH)
         # )
-        startDate = CF.getStartFetchingDate(callStartDate=callDate)
+        startDate = CF.getStartFetchingDate(callStartDate=callDate, fetchingLength=CONF.PREDICTION_WINDOW_LENGTH)
         endDate = CF.getEndFetchingDate(callEndDate=callDate)
 
         if countIndex % 100 == 0:
@@ -373,7 +374,7 @@ class MainWrapperKR:
               & (
                     Q(close__gte=krbottomline) # applies only for first object
                 )
-            ).order_by('-reg_date')
+            ).order_by('-reg_date').distinct()
 
             if not tmpQuery.exists():
                 raise Exception(f"DB Empty for tick : {tick}")

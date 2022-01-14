@@ -13,7 +13,38 @@ from appStockPrediction.job.interface.predictionModels.builder import (
 
 class PredictionXGBoost(TestCase):
 
-    def test_genDataFrame(self):
+    def test_checkDataframe(self):
+        import pickle, os
+        import copy
+        from pathlib import Path
+        import pandas as pd
+
+        root = Path(__file__).resolve().parent.parent
+        print(f'root : {root}')
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'tmpMainDF.p'
+                ), 'rb'
+        ) as f:
+            tmpMainDF = copy.deepcopy(pickle.load(f))
+
+        with open(
+                os.path.join(
+                    root,
+                    'testMockData', 'tmpPredDF.p'
+                ), 'rb'
+        ) as f:
+            tmpPredDF = copy.deepcopy(pickle.load(f))
+
+        print(f'tmpPredDF.head(10) : \n{tmpPredDF.head(10)}')
+        print(f'tmpMainDF.head(10) : \n{tmpMainDF.head(10)}')
+        print(f'len(tmpPredDF) : \n{len(tmpPredDF)}')
+        print(f'len(tmpMainDF) : \n{len(tmpMainDF)}')
+
+
+    def test_predictXGBoost(self):
         import pickle, os
         import copy
         from pathlib import Path

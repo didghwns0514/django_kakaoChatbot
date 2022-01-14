@@ -67,7 +67,10 @@ def getEndFetchingDate(callEndDate:datetime.datetime):
     return callEndDate
 
 
-def getStartFetchingDate(callStartDate:datetime.datetime):
+def getStartFetchingDate(
+                         callStartDate:datetime.datetime,
+                         fetchingLength:int=CONF.TOTAL_REQUEST_DATE_LENGTH
+):
 
     for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
         kr_holidays = pytimekr.holidays()
@@ -92,7 +95,7 @@ def getStartFetchingDate(callStartDate:datetime.datetime):
         else: counterRequiredDates += 1
         callDateFiltered -= datetime.timedelta(days=1)
 
-        if counterRequiredDates >= CONF.TOTAL_REQUEST_DATE_LENGTH:
+        if counterRequiredDates >= fetchingLength:
             break
 
         counter += 1

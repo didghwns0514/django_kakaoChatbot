@@ -1,4 +1,7 @@
 import traceback
+import os
+
+import StockManager.subSettings as CONFI
 
 from django.db.models import Q, F
 from bulk_update.helper import bulk_update
@@ -41,11 +44,15 @@ class MainWrapperKR:
 
     def doAction(self, isDataFetchOn:bool=True):
         logger.info("MainWrapperKR - doAction")
-
+        IS_DATA_FETCH_NEEDED = True
         #self.clearConnections()
         #self.getLoggerForAllInfos()
 
         if isDataFetchOn:
+            if CONFI.DEBUG:
+                IS_DATA_FETCH_NEEDED = bool(int(os.environ.get('IS_DATA_FETCH_NEEDED')))
+
+        if IS_DATA_FETCH_NEEDED:
             self.stockList.doAction()
             self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
 
@@ -445,7 +452,7 @@ class MainWrapperKR:
                           &  Q(reg_date__range=(startDate, endDate))
                         ).order_by('-reg_date')
 
-                    if stockItemsQuery.exists() and stockItemsQuery.count() >= CONF.TOTAL_REQUEST_DATE_LENGTH:
+                    if stockItemsQuery.exists() and stockItemsQuery.count() >= CONF.PREDICTION_WINDOW_LENGTH:
                         # wanted data length already exists
                         pass # skip
                     else:
@@ -622,9 +629,12 @@ class GetStockInfo:
 
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
+                    startDay = self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False)
+                    endDay = self.setTimeFormat(datetime.today(), haveSeparator=False)
+                    logger.info(f"GetStockInfo - getBasicKOSDAQ; startDay : {startDay}, endDay : {endDay}")
                     tmpData = stock.get_market_ohlcv_by_date(
-                        fromdate=self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
-                        todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
+                        fromdate=startDay,
+                        todate=endDay,
                         ticker=stockID,
                         name_display=False
                     )
@@ -646,9 +656,12 @@ class GetStockInfo:
 
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
+                    startDay = self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False)
+                    endDay = self.setTimeFormat(datetime.today(), haveSeparator=False)
+                    logger.info(f"GetStockInfo - getTickerKOSDAQ; startDay : {startDay}, endDay : {endDay}")
                     tmpData = stock.get_market_fundamental(
-                        self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
-                        self.setTimeFormat(datetime.today(), haveSeparator=False),
+                        startDay,
+                        endDay,
                         stockID, freq="d")
 
                     if not tmpData.empty:
@@ -667,9 +680,12 @@ class GetStockInfo:
 
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
+                    startDay = self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False)
+                    endDay = self.setTimeFormat(datetime.today(), haveSeparator=False)
+                    logger.info(f"GetStockInfo - getBasicKOSPI; startDay : {startDay}, endDay : {endDay}")
                     tmpData = stock.get_market_ohlcv_by_date(
-                        fromdate=self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
-                        todate=self.setTimeFormat(datetime.today(), haveSeparator=False),
+                        fromdate=startDay,
+                        todate=endDay,
                         ticker=stockID,
                         name_display=False
                     )
@@ -692,9 +708,12 @@ class GetStockInfo:
 
             for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
                 try:
+                    startDay = self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False)
+                    endDay = self.setTimeFormat(datetime.today(), haveSeparator=False)
+                    logger.info(f"GetStockInfo - getTickerKOSPI; startDay : {startDay}, endDay : {endDay}")
                     tmpData = stock.get_market_fundamental(
-                        self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False),
-                        self.setTimeFormat(datetime.today(), haveSeparator=False),
+                        startDay,
+                        endDay,
                         stockID, freq="d",
                     )
                     if not tmpData.empty:
@@ -706,10 +725,6 @@ class GetStockInfo:
             else:
                 logger.critical(f"GetStockInfo - getTickerKOSPI; Empty Dataframe, ticker : {stockID}")
         logger.info(f"GetStockInfo - getTickerKOSPI; getTicker Total data length : {len(self.infoTickerKOSPI)}")
-
-
-    def createStartDate(self, normDate=datetime.today()):
-        return normDate - timedelta(days=GetStockInfo.TOTAL_REQUEST_DATE_LENGTH)
 
     def setTimeFormat(self, datetimeObject, haveSeparator=True):
         if haveSeparator:
