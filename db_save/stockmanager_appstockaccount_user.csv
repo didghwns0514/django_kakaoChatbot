@@ -1,0 +1,4 @@
+#,id,password,last_login,name,email,is_active,is_admin,is_payedOn
+1,1,pbkdf2_sha256$260000$sbf3FTm6q3qHvlb5jfMzFd$uFt3a0p/DeeQGNO58rx1dUnJTtzBEH865dvlJOTlSck=,2022-01-13 07:32:23.893662,Admin,ghost219@naver.com,1,1,
+2,3,pbkdf2_sha256$260000$MpUHoDk4EDyHp0VPOgjJrr$A/7D6Lb86v7dUQct4ZWRSg7Xkehya30Iw0EbtwLOQac=,2022-01-11 17:12:16.522354,aacount,didghwns@gmail.com,1,1,
+3,4,pbkdf2_sha256$260000$vhQW3plpWvusGB5TGpDV2V$YF3aVVV5cI0DxJv84rJBqMgtrItpKc8FLEWlBPpnLxM=,2022-01-11 17:42:32.663123,abcd,abcd@abcd,1,0,

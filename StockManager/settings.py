@@ -128,6 +128,9 @@ DATABASES = {
         'PASSWORD': CONFI.DB_PASSWORD,  #4
         'HOST': 'hjyang.iptime.org',   #5
         'PORT': '44441', #6
+        'TEST': {
+                    'NAME': 'myteststockmanager',
+                },
     }
 }
 

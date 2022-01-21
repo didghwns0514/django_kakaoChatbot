@@ -13,6 +13,8 @@ from appStockPrediction.job.interface.predictionModels.builder import (
 
 class PredictionXGBoost(TestCase):
 
+    reset_sequences = True
+
     def test_checkDataframe(self):
         import pickle, os
         import copy

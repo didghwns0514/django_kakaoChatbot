@@ -1,0 +1,4 @@
+#,id,password,last_login,is_superuser,username,first_name,last_name,email,is_staff,is_active,date_joined
+1,1,pbkdf2_sha256$260000$O3e3IHBwiVITwCWs906QgC$gcZw72Dx/vuzdc/34TRGZbCILM9KZK//rLpN8ssU+yw=,2022-01-11 16:30:40.535408,1,admin,"","",didghwns0514@gmail.com,1,1,2022-01-09 06:01:08.033529
+2,2,pbkdf2_sha256$260000$0Prgy2PPCK0FDMgOZQ9t98$pt5vHuBALdy3Z+RsYBeGWhzaXpL6y3XD3TPyG0q927g=,2022-01-11 11:04:25.861853,0,korshika,"","",didghwn0514@gmail.com,0,1,2022-01-11 11:04:25.664825
+3,4,pbkdf2_sha256$260000$WCxcvYsS3z1ofxucVmSxy5$uS5oR4XzaKR7nPPAza96QtaCp93EF3IYg8qimImYHic=,2022-01-11 16:13:17.424057,0,aaaa,"","",aaa@bbbb,0,1,2022-01-11 16:13:17.342081
