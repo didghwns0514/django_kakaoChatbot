@@ -1,0 +1,73 @@
+#,id,name,content_type_id,codename
+1,1,Can add log entry,1,add_logentry
+2,2,Can change log entry,1,change_logentry
+3,3,Can delete log entry,1,delete_logentry
+4,4,Can view log entry,1,view_logentry
+5,5,Can add permission,2,add_permission
+6,6,Can change permission,2,change_permission
+7,7,Can delete permission,2,delete_permission
+8,8,Can view permission,2,view_permission
+9,9,Can add group,3,add_group
+10,10,Can change group,3,change_group
+11,11,Can delete group,3,delete_group
+12,12,Can view group,3,view_group
+13,13,Can add content type,4,add_contenttype
+14,14,Can change content type,4,change_contenttype
+15,15,Can delete content type,4,delete_contenttype
+16,16,Can view content type,4,view_contenttype
+17,17,Can add session,5,add_session
+18,18,Can change session,5,change_session
+19,19,Can delete session,5,delete_session
+20,20,Can view session,5,view_session
+21,21,Can add django job,6,add_djangojob
+22,22,Can change django job,6,change_djangojob
+23,23,Can delete django job,6,delete_djangojob
+24,24,Can view django job,6,view_djangojob
+25,25,Can add django job execution,7,add_djangojobexecution
+26,26,Can change django job execution,7,change_djangojobexecution
+27,27,Can delete django job execution,7,delete_djangojobexecution
+28,28,Can view django job execution,7,view_djangojobexecution
+29,29,Can add Token,8,add_token
+30,30,Can change Token,8,change_token
+31,31,Can delete Token,8,delete_token
+32,32,Can view Token,8,view_token
+33,33,Can add token,9,add_tokenproxy
+34,34,Can change token,9,change_tokenproxy
+35,35,Can delete token,9,delete_tokenproxy
+36,36,Can view token,9,view_tokenproxy
+37,37,Can add stock tick,10,add_stocktick
+38,38,Can change stock tick,10,change_stocktick
+39,39,Can delete stock tick,10,delete_stocktick
+40,40,Can view stock tick,10,view_stocktick
+41,41,Can add stock item list name,11,add_stockitemlistname
+42,42,Can change stock item list name,11,change_stockitemlistname
+43,43,Can delete stock item list name,11,delete_stockitemlistname
+44,44,Can view stock item list name,11,view_stockitemlistname
+45,45,Can add stock section,12,add_stocksection
+46,46,Can change stock section,12,change_stocksection
+47,47,Can delete stock section,12,delete_stocksection
+48,48,Can view stock section,12,view_stocksection
+49,49,Can add stock item list section,13,add_stockitemlistsection
+50,50,Can change stock item list section,13,change_stockitemlistsection
+51,51,Can delete stock item list section,13,delete_stockitemlistsection
+52,52,Can view stock item list section,13,view_stockitemlistsection
+53,53,Can add stock item,14,add_stockitem
+54,54,Can change stock item,14,change_stockitem
+55,55,Can delete stock item,14,delete_stockitem
+56,56,Can view stock item,14,view_stockitem
+57,57,Can add stock last update time,15,add_stocklastupdatetime
+58,58,Can change stock last update time,15,change_stocklastupdatetime
+59,59,Can delete stock last update time,15,delete_stocklastupdatetime
+60,60,Can view stock last update time,15,view_stocklastupdatetime
+61,61,Can add stock user,16,add_stockuser
+62,62,Can change stock user,16,change_stockuser
+63,63,Can delete stock user,16,delete_stockuser
+64,64,Can view stock user,16,view_stockuser
+65,65,Can add stock prediction history,17,add_stockpredictionhistory
+66,66,Can change stock prediction history,17,change_stockpredictionhistory
+67,67,Can delete stock prediction history,17,delete_stockpredictionhistory
+68,68,Can view stock prediction history,17,view_stockpredictionhistory
+69,69,Can add user,18,add_user
+70,70,Can change user,18,change_user
+71,71,Can delete user,18,delete_user
+72,72,Can view user,18,view_user
