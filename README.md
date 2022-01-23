@@ -59,11 +59,11 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
   - Used Jenkins and github main branch for CD & CI
   - Used Docker-hub to maintain image for django  
     <br>
-    <img src='images/2022-01-23-20-56-56.png' width=700px height=400px/>
+    <img src='images/2022-01-23-20-56-56.png' width=700px height=350px/>
   - Used Slack for build notification and progress notifictaion  
     <img src='images/2022-01-23-20-19-51.png' width=700px height=400px/>
     <br>
-    <img src='images/2022-01-23-20-21-11.png' width=700px height=400px/>
+    <img src='images/2022-01-23-20-21-11.png' width=700px height=350px/>
 
 <br>
 
@@ -72,9 +72,9 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
   - Service method:
     - **Gunicorn**
       - Dockerfile is used to start cmd execution of Gunicorn  
-        <img src='images/2022-01-23-20-23-15.png' width=700px height=400px/>
+        <img src='images/2022-01-23-20-23-15.png' width=700px height=430px/>
       - 2 Server is running concurrently envoked by shell script using docker; To ensure that running of data generating server and request handling server is well separated using Nginx  
-        <img src='images/2022-01-23-20-25-47.png' width=700px height=400px/>
+        <img src='images/2022-01-23-20-25-47.png' width=700px height=430px/>
     - **Nginx** as proxy server and static server infront of Gunicorn
       - Nginx as Load-balancer and proxy for 2 servers that are running
       - Also used for serving static files to ease the WAS load  
@@ -259,7 +259,7 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
   2. Buttons will appear for your choice of methods <br/>
      <img src='images/2022-01-23-20-13-33.png' width=300px height=200px/>
      <br/>
-     <img src='images/2022-01-23-20-11-41.png' width=600px height=450px />
+     <img src='images/2022-01-23-20-11-41.png' width=500px height=450px />
 
   3. Type in which stock catagory you are looking for <br/>
 
