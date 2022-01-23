@@ -4,7 +4,7 @@ An django framework that communicates with Kakao API server using provided front
 <br/>
 Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 
-> Is now served using DNS <a>www.stockmanager.site</a>
+> Is now served using DNS <a href=www.stockmanager.site>www.stockmanager.site</a>
 
 <br/>
 
