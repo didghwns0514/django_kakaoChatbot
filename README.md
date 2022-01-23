@@ -13,15 +13,37 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 ## Table of Contents
 
 - Sections
-  - [django_kakaoChatbot](https://github.com/didghwns0514/django_kakaoChatbot/blob/master/README.md#django_kakaoChatbot)
+  - [django_kakaoChatbot-What is used](https://github.com/didghwns0514/django_kakaoChatbot/blob/master/README.md#django_kakaoChatbot)
   - [Usage](https://github.com/didghwns0514/django_kakaoChatbot/blob/master/README.md#Usage)
   - [Maintainer](https://github.com/didghwns0514/django_kakaoChatbot/blob/master/README.md#Maintainer)
 
 <br/>
 
+## Sections
+
+### django_kakaoChatbot
+
+**Status :** _`Live on DNS`_
+
+**Used :**
+
+- Frontend
+
+  - JSON response to communicate with kakao-chatbot API
+
+- Backend
+  - Business logic :
+    - Periodic function to get Data and serve to frontend <br/>
+    - XGBoost to predict stock trends on daily basis
+  - Database : simple `mysql` and `bulk methods`
+
+<br/>
+
 ---
 
-## **Framework & library used :**
+### Specifics
+
+#### **Framework & library used :**
 
 - Django
 - Frontend : Simple user page and dailty information served through with Kakao API-chatbot with JSON format
@@ -35,9 +57,12 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 
 - CD & CI
   - Used Jenkins and github main branch for CD & CI
-  - Used Slack for build notification and progress notifictaion
-    <img src='images/2022-01-23-20-19-51.png' width=600px height=300px/>
-    <img src='images/2022-01-23-20-21-11.png' width=600px height=200px/>
+  - Used Docker-hub to maintain image for django  
+    <img src='images/2022-01-23-20-49-58.png' />
+  - Used Slack for build notification and progress notifictaion  
+    <img src='images/2022-01-23-20-19-51.png' width=700px height=300px/>
+    <br>
+    <img src='images/2022-01-23-20-21-11.png' width=700px height=200px/>
 
 <br>
 
@@ -45,14 +70,14 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 
   - Service method:
     - **Gunicorn**
-      - Dockerfile is used to start cmd execution of Gunicorn
-        <img src='images/2022-01-23-20-23-15.png' width=600px height=200px/>
-      - 2 Server is running concurrently envoked by shell script using docker; To ensure that running of data generating server and request handling server is well separated using Nginx
-        <img src='images/2022-01-23-20-25-47.png' width=600px height=200px/>
+      - Dockerfile is used to start cmd execution of Gunicorn  
+        <img src='images/2022-01-23-20-23-15.png' width=700px height=200px/>
+      - 2 Server is running concurrently envoked by shell script using docker; To ensure that running of data generating server and request handling server is well separated using Nginx  
+        <img src='images/2022-01-23-20-25-47.png' width=700px height=200px/>
     - **Nginx** as proxy server and static server infront of Gunicorn
       - Nginx as Load-balancer and proxy for 2 servers that are running
-      - Also used for serving static files to ease the WAS load
-        <img src='images/2022-01-23-20-28-00.png' width=600px height=200px/>
+      - Also used for serving static files to ease the WAS load  
+        <img src='images/2022-01-23-20-28-00.png' width=700px height=200px/>
 
 <br>
 
@@ -163,30 +188,8 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 - Test
   - Every Model and service was test using **`django.unitest`** and python **`unittest`** library
 
----
-
 <br>
 <br>
-
-## Sections
-
-### django_kakaoChatbot
-
-**Status :** Live on Local PC( not always on )
-
-**Used :**
-
-- Frontend
-
-  - JSON response to communicate with kakao-chatbot API
-
-- Backend
-  - Business logic :
-    - Selenium crawler running under apscheduler <br/>
-      [Selenium code link](https://github.com/didghwns0514/django_kakaoChatbot/blob/master/BusinessLogic/Parser.py)
-  - Database : simple `mysql` and `bulk methods`
-
-<br/>
 
 ---
 
@@ -243,9 +246,9 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 
 <br>
 
-### Usage
+## Usage
 
-**Simple usage :**
+### **Simple usage :**
 
 - image
 
@@ -254,11 +257,12 @@ Will provide you **`Daily Top Stocks`** at any time thorugh KakaoTalk as front.
 
   2. Buttons will appear for your choice of methods <br/>
      <img src='images/2022-01-23-20-13-33.png' width=300px height=200px/>
-     <img src='images/2022-01-23-20-11-41.png' width=600px height=400px />
+     <br/>
+     <img src='images/2022-01-23-20-11-41.png' width=600px height=300px />
 
   3. Type in which stock catagory you are looking for <br/>
      **For looking up specific stock tick and it's prediction**
-     <img src='images/2022-01-23-20-16-41.png' width=600px height=400px/>
+     <img src='images/2022-01-23-20-16-41.png' width=500px height=500px/>
 
 ---
 
