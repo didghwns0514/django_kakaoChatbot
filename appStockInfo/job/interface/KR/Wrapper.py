@@ -100,13 +100,13 @@ class MainWrapperKR:
         logger.info("MainWrapperKR - createStockTick")
 
         # update isInfoAvailable
-        all_stocktick = StockTick.objects.all()
-        if all_stocktick.exists():
-            for stock_tick in all_stocktick:
-                stock_tick.stock_isInfoAvailable = True
-
-            # bulk update
-            bulk_update(all_stocktick)
+        # all_stocktick = StockTick.objects.all()
+        # if all_stocktick.exists():
+        #     for stock_tick in all_stocktick:
+        #         stock_tick.stock_isInfoAvailable = True
+        #
+        #     # bulk update
+        #     bulk_update(all_stocktick)
 
         # get all stock ticks
         exsist_stocktick = StockTick.objects.all().values_list('stock_tick', flat=True)
