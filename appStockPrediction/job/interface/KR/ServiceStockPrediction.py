@@ -44,7 +44,9 @@ class MainWrapperKR:
         logger.info("MainWrapperKR - doAction")
 
         if isCallCurrentDatetime:
+            CF.clearConnections()
             self.deleteStockPredictionHistory(calledDatetime)
+            CF.clearConnections()
             self.createStockPredictionHistory(calledDatetime, krbottomline=krbottomline, krvolumefilter=krvolumefilter)
         else:
             self.deleteStockPredictionHistory(datetime.datetime(2022,1,7,10))

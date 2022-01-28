@@ -2,9 +2,18 @@ import ConfigFile as CONF
 
 from pytimekr import pytimekr
 import datetime, pandas as pd
+from django.db import (
+    close_old_connections,
+    connections
+)
 
 import logging
 logger = logging.getLogger('my')
+
+def clearConnections():
+    # https://stackoverflow.com/questions/20058589/closing-db-connection-with-djangos-persistent-connection-in-a-multi-threaded-sc
+    logger.info("CommonFunction - clearConnections")
+    close_old_connections()
 
 
 def getMarketNumber(marketString:str):

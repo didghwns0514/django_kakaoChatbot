@@ -25,10 +25,7 @@ import requests as rq
 from io import BytesIO
 import time
 
-from django.db import (
-    close_old_connections,
-    connections
-)
+
 
 import logging
 logger = logging.getLogger('appStockInfo')
@@ -45,7 +42,7 @@ class MainWrapperKR:
     def doAction(self, isDataFetchOn:bool=True):
         logger.info("MainWrapperKR - doAction")
         IS_DATA_FETCH_NEEDED = True
-        #self.clearConnections()
+        CF.clearConnections()
         #self.getLoggerForAllInfos()
 
         if isDataFetchOn:
@@ -58,31 +55,35 @@ class MainWrapperKR:
 
             # CRUD
             # 1) Create StockTick
+            CF.clearConnections()
             self.createStockTick(self.stockList.KOSPI, "KOSPI")
+            CF.clearConnections()
             self.createStockTick(self.stockList.KOSDAQ, "KOSDAQ")
 
             # 2) Create StockItemListName
+            CF.clearConnections()
             self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
+            CF.clearConnections()
             self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
 
 
             # 3) Create StockSection
+            CF.clearConnections()
             self.createStockSection()
+            CF.clearConnections()
             self.createStockItemListSection()
 
             # 4-1) Delete StockItems
+            CF.clearConnections()
             self.deleteStockItem(datetime.now())
             # 4-2) Create StockItems
+            CF.clearConnections()
             self.createStockItem(datetime.now())
 
         # 5) Create DateStamp
+        CF.clearConnections()
         self.updateStockLastUpdateTime(dateStamp=datetime.now())
 
-
-    def clearConnections(self):
-        # https://stackoverflow.com/questions/20058589/closing-db-connection-with-djangos-persistent-connection-in-a-multi-threaded-sc
-        logger.info("MainWrapperKR - clearConnections")
-        close_old_connections()
 
 
     def createStockTick(self, listStocks: list, marketName: str = 'Dummy'):
