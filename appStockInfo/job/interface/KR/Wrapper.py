@@ -51,7 +51,7 @@ class MainWrapperKR:
 
         if IS_DATA_FETCH_NEEDED:
             self.stockList.doAction()
-            self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ)
+            self.stockInfo.doAction(self.stockList.KOSPI, self.stockList.KOSDAQ, GetStockList.INDEX_KRPYX)
 
             # CRUD
             # 1) Create StockTick
@@ -59,12 +59,16 @@ class MainWrapperKR:
             self.createStockTick(self.stockList.KOSPI, "KOSPI")
             CF.clearConnections()
             self.createStockTick(self.stockList.KOSDAQ, "KOSDAQ")
+            CF.clearConnections()
+            self.createStockTick(GetStockList.INDEX_KRPYX, "KOSPI")
 
             # 2) Create StockItemListName
             CF.clearConnections()
             self.createStockItemListName(self.stockList.KOSPI, "KOSPI")
             CF.clearConnections()
             self.createStockItemListName(self.stockList.KOSDAQ, "KOSDAQ")
+            CF.clearConnections()
+            self.createStockItemListName(GetStockList.INDEX_KRPYX, "KOSPI")
 
 
             # 3) Create StockSection
@@ -527,17 +531,32 @@ class MainWrapperKR:
         logger.info(f"getLoggerForAllInfos - tmpOverlapp : {tmpOverlapp}")
 
 class GetStockList:
+
+    INDEX_CODE_KOSPI = [
+        "069500",  # KODEX 200
+        "252670",  # KODEX 200선물인버스2X
+        "122630",  # KODEX 레버리지
+        "233740",  # KODEX 코스닥150 레버리지
+        "114800",  # KODEX 인버스
+
+    ]
+    INDEX_KRPYX = [
+        "1001", # 코스피
+        "1028", # 코스피 200
+    ]
+
     def __init__(self):
         self.KOSDAQ = []
         self.KOSPI = []
+        self.ALL = []
         self.tickerToName = {}
-
 
     def doAction(self):
         logger.info("GetStockList - doAction")
         self.getMarketTickers()
         self.getTickerNameKOSDAQ()
         self.getTickerNameKOSPI()
+        self.getTickerNameINDEX()
 
 
     def getMarketTickers(self):
@@ -556,11 +575,13 @@ class GetStockList:
         else:
             logger.critical("GetStockList - getMarketTickers; KOSDAQ No data retrieved")
 
+
         for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
             try:
                 tmpData2 = list(set(stock.get_market_ticker_list(market="KOSPI")))
                 if tmpData2:
                     self.KOSPI = tmpData2
+                    # self.KOSPI += GetStockList.INDEX_CODE_KOSPI
                     logger.info(f"GetStockList - getMarketTickers; KOSPI Total data retrieved : {len(self.KOSPI)}")
                     break
             except:pass
@@ -569,6 +590,19 @@ class GetStockList:
         else:
             logger.critical("GetStockList - getMarketTickers; KOSPI No data retrieved")
 
+
+        for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+            try:
+                tmpData3 = list(set(stock.get_market_ticker_list(market="ALL")))
+                if tmpData3:
+                    self.ALL = tmpData3
+                    logger.info(f"GetStockList - getMarketTickers; ALL Total data retrieved : {len(self.ALL)}")
+                    break
+            except:pass
+            time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+
+        else:
+            logger.critical("GetStockList - getMarketTickers; ALL No data retrieved")
 
     def getTickerNameKOSDAQ(self):
         logger.info("GetStockList - getTickerNameKOSDAQ")
@@ -589,8 +623,26 @@ class GetStockList:
                 self.tickerToName[stockTicker] = stockTicker
                 logger.critical(f"GetStockList - getTickerNameKOSPI; No name retrieved, ticker : {stockTicker}")
 
+    def getTickerNameALL(self):
+        logger.info("GetStockList - getTickerNameALL")
+        for stockTicker in self.ALL:
+            try:
+                self.tickerToName[stockTicker] = stock.get_market_ticker_name(stockTicker)
+            except:
+                self.tickerToName[stockTicker] = stockTicker
+                logger.critical(f"GetStockList - getTickerNameALL; No name retrieved, ticker : {stockTicker}")
+
+    def getTickerNameINDEX(self):
+        logger.info("GetStockList - getTickerNameINDEX")
+        for stockTicker in GetStockList.INDEX_KRPYX:
+            try:
+                self.tickerToName[stockTicker] = stock.get_index_ticker_name(stockTicker)
+            except:
+                self.tickerToName[stockTicker] = stockTicker
+                logger.critical(f"GetStockList - getTickerNameINDEX; No name retrieved, ticker : {stockTicker}")
+
     def __str__(self) -> str:
-        return f'KOSDAQ : \n {self.KOSDAQ[:10]}  \nKOSPI : \n {self.KOSPI[:10]}'
+        return f'KOSDAQ : \n {self.KOSDAQ[:10]}  \nKOSPI : \n {self.KOSPI[:10]}\nKONEX : \n {self.ALL[:10]}'
 
 
 class GetStockInfo:
@@ -601,17 +653,22 @@ class GetStockInfo:
         self.infoBasicKOSPI = {}
         self.infoTickerKOSDAQ = {}
         self.infoTickerKOSPI = {}
+        self.infoBasicINDEX = {}
+        self.infoTickerINDEX = {}
 
         self.infoFinanceData = None
 
 
-    def doAction(self, listKOSPI: list, listKOSDAQ: list):
+    def doAction(self, listKOSPI: list, listKOSDAQ: list, listINDEX: list):
         logger.info("GetStockInfo - doAction")
         self.getBasicKOSPI(listKOSPI)
         self.getTickerKOSPI(listKOSPI)
 
         self.getBasicKOSDAQ(listKOSDAQ)
         self.getTickerKOSDAQ(listKOSDAQ)
+
+        self.getBasicINDEX(listINDEX)
+        self.getTickerINDEX(listINDEX)
 
         self.getFinanceData()
 
@@ -735,6 +792,60 @@ class GetStockInfo:
             else:
                 logger.critical(f"GetStockInfo - getTickerKOSPI; Empty Dataframe, ticker : {stockID}")
         logger.info(f"GetStockInfo - getTickerKOSPI; getTicker Total data length : {len(self.infoTickerKOSPI)}")
+
+
+    def getBasicINDEX(self, listINDEX: list):
+        logger.info("GetStockInfo - getBasicINDEX")
+        for stockID in listINDEX:
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    startDay = self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False)
+                    endDay = self.setTimeFormat(datetime.today(), haveSeparator=False)
+                    logger.info(f"GetStockInfo - getBasicINDEX; startDay : {startDay}, endDay : {endDay}")
+                    tmpData = stock.get_index_ohlcv(
+                        fromdate=startDay,
+                        todate=endDay,
+                        ticker=stockID,
+                        name_display=False
+                    )
+
+                    if not tmpData.empty:
+                        self.infoBasicINDEX[stockID] = tmpData
+                        break
+
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getBasicINDEX; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getBasicINDEX; getBasic Total data length : {len(self.infoBasicINDEX)}")
+
+
+
+    def getTickerINDEX(self, listINDEX: list):
+        logger.info("GetStockInfo - getTickerINDEX")
+        for stockID in listINDEX:
+
+            for _ in range(CONF.TOTAL_RETRY_FOR_FETCH_FAIL):
+                try:
+                    startDay = self.setTimeFormat(CF.getStartFetchingDate(datetime.now()), haveSeparator=False)
+                    endDay = self.setTimeFormat(datetime.today(), haveSeparator=False)
+                    logger.info(f"GetStockInfo - getTickerINDEX; startDay : {startDay}, endDay : {endDay}")
+                    tmpData = stock.get_index_fundamental(
+                        startDay,
+                        endDay,
+                        stockID, freq="d",
+                    )
+                    if not tmpData.empty:
+                        self.infoTickerINDEX[stockID] = tmpData
+                        break
+
+                except:pass
+                time.sleep(CONF.SLEEP_SECONDS_BETWEEN_RQ)
+            else:
+                logger.critical(f"GetStockInfo - getTickerINDEX; Empty Dataframe, ticker : {stockID}")
+        logger.info(f"GetStockInfo - getTickerINDEX; getTicker Total data length : {len(self.infoTickerINDEX)}")
+
 
     def setTimeFormat(self, datetimeObject, haveSeparator=True):
         if haveSeparator:

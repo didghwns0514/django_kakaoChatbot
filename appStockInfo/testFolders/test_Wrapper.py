@@ -14,11 +14,13 @@ class GetStockListTest(TestCase):
     def test_GetStockList(self):
         stockList = GetStockList()
         stockList.getMarketTickers()
-        totalList = stockList.KOSDAQ + stockList.KOSPI
+        totalList = stockList.KOSDAQ + stockList.KOSPI + stockList.ALL
 
         print(f'len(stockList.KOSDAQ) : {len(stockList.KOSDAQ)}')
         print(f'len(stockList.KOSPI) : {len(stockList.KOSPI)}')
+        print(f'len(stockList.ALL) : {len(stockList.ALL)}')
         print(stockList)
+        print(totalList)
 
         self.assertGreater(len(totalList), 2000)
 
@@ -28,7 +30,7 @@ class GetStockListTest(TestCase):
         stockList.doAction()
         tickerNames = stockList.tickerToName
 
-        for ticker in list(tickerNames.keys())[:10]:
+        for ticker in list(tickerNames.keys()):
             print(f'ticker : {ticker}  // name : {tickerNames[ticker]}')
 
 
@@ -121,7 +123,7 @@ class GetStockInfoTest(TestCase):
         print(f'Finished mock data GetStockList!')
 
         stockInfo = GetStockInfo()
-        stockInfo.doAction(stockList.KOSPI, stockList.KOSDAQ)
+        stockInfo.doAction(stockList.KOSPI, stockList.KOSDAQ, GetStockList.INDEX_KRPYX)
         print(f'Finished mock data GetStockInfo!')
 
         startTime = time.time()
